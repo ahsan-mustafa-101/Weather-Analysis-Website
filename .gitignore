@@ -1,0 +1,72 @@
+# ==========================
+# Python
+# ==========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables (API Keys, Secrets)
+.env
+.env.*
+
+# Python Packaging
+build/
+dist/
+*.egg-info/
+
+# ==========================
+# VS Code
+# ==========================
+.vscode/
+
+# ==========================
+# Logs
+# ==========================
+*.log
+
+# ==========================
+# OS Files
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Pytest
+# ==========================
+.pytest_cache/
+
+# ==========================
+# Jupyter Notebook
+# ==========================
+.ipynb_checkpoints/
+
+# ==========================
+# Coverage Reports
+# ==========================
+.coverage
+htmlcov/
+
+# ==========================
+# SQLite Database
+# Uncomment if you DON'T want
+# to upload your database.
+# ==========================
+# *.db
+# *.sqlite3
+
+# ==========================
+# Temporary Files
+# ==========================
+*.tmp
+*.temp
+
+# ==========================
+# Cache
+# ==========================
+.cache/
