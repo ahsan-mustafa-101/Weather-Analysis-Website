@@ -1,7 +1,6 @@
 import sys
 import database
-import reqdata
-import parsedata
+import api_fetch
 
 BASE_URL = "https://geocoding-api.open-meteo.com/v1/"
 
@@ -48,7 +47,7 @@ def main():
 
     searched_city = get_city()
 
-    geo_data = reqdata.get_geo_data(searched_city)
+    geo_data = api_fetch.get_geo_data(searched_city)
     if geo_data is None:
         conn.close()
         sys.exit()
@@ -65,7 +64,7 @@ def main():
 
     locations = []
     for index in range(len(geo_data["results"])):
-        location_id, name, lat , lon = parsedata.parse_geo(geo_data, index)
+        location_id, name, lat , lon = api_fetch.parse_geo(geo_data, index)
 
         locations.append(
             {
@@ -86,13 +85,13 @@ def main():
     chosen = locations[required_city - 1]
     name, latitude, longitude = chosen["name"] ,chosen["latitude"], chosen["longitude"]
 
-    forecast_data = reqdata.get_forecast_data(latitude, longitude)
+    forecast_data = api_fetch.get_forecast_data(latitude, longitude)
 
     if forecast_data is None:
         conn.close()
         sys.exit()
     
-    values = parsedata.parse_forecast(forecast_data)
+    values = api_fetch.parse_forecast(forecast_data)
 
     if values is None:
         print("Forecast data is unavailable.")
