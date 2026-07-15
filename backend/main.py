@@ -62,17 +62,13 @@ def main():
         conn.close()
         sys.exit()
 
-    locations = []
-    for index in range(len(geo_data["results"])):
-        location_id, name, lat , lon = api_fetch.parse_geo(geo_data, index)
+    locations = api_fetch.parse_geo(geo_data)
 
-        locations.append(
-            {
-                "location_id" : location_id, "name" : name, "latitude" : lat, "longitude" : lon 
-            }
-        )
-        print(f"{index + 1}: | {location_id} | {name} | {lat} | {lon}")
+    count = 0
+    for location in locations:
+        print(f"{count + 1}: | {location["location_id"]} | {location["name"]} | {location["latitude"]} | {location["longitude"]}")
         print("-" * 50)
+        count += 1
 
 
     while True:
@@ -105,8 +101,7 @@ def main():
 
 
     # saving into database
-
-    db_location_id = database.insert_location(conn, name, lat, lon)
+    db_location_id = database.insert_location(conn, name, latitude, longitude)
     if db_location_id is None:
         print("Could not save location to database.")
         conn.close()

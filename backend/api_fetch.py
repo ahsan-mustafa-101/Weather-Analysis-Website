@@ -1,4 +1,5 @@
 import requests
+import math
 from datetime import datetime, timezone
 from main import BASE_URL
 
@@ -32,13 +33,20 @@ def get_forecast_data(lat, lon):
             return None
 
 
-def parse_geo(geo_data, index):
-    loaction_id = geo_data["results"][index]["id"]
-    name = geo_data["results"][index]["name"]
-    lat = geo_data["results"][index]["latitude"]
-    lon = geo_data["results"][index]["longitude"]
+def parse_geo(geo_data):
+    locations = []
+    for index in range(len(geo_data["results"])):
+        location_id = geo_data["results"][index]["id"]
+        name = geo_data["results"][index]["name"]
+        lat = geo_data["results"][index]["latitude"]
+        lon = geo_data["results"][index]["longitude"]
     
-    return loaction_id, name, lat, lon
+        locations.append(
+            {
+                "location_id" : location_id, "name" : name, "latitude" : lat, "longitude" : lon 
+            }
+        )
+    return locations    
 
 
 def parse_forecast(data):
@@ -51,6 +59,7 @@ def parse_forecast(data):
         data["hourly"]["temperature_2m"]
     ):
         time = datetime.fromtimestamp(time, tz= timezone.utc)
+        temp = math.ceil(temp)
         values.append(
         {
             "time" : time,
