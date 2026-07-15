@@ -1,30 +1,6 @@
 import api_fetch
-from database import insert_forecasts,  get_connection
+from database import fetch_locations, insert_forecasts, get_connection
 from apscheduler.schedulers.blocking import BlockingScheduler
-
-
-def fetch_locations(conn):
-    try:
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT * FROM locations;
-            """
-            )
-            column_names = [desc[0] for desc in cur.description]
-
-            locations = cur.fetchall();
-
-            # converting tuple into dict
-            result = [
-                dict(zip(column_names, location))
-                for location in locations
-            ]
-
-            return result
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
-        return None
-
 
 def forecast_locations():
     conn = get_connection()

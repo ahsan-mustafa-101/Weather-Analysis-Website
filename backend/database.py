@@ -85,3 +85,26 @@ def insert_forecasts(conn, location_id, forecast_records):
     except psycopg.Error as e:
         conn.rollback()
         print(f"Error inserting forecasts: {e}")
+
+
+def fetch_locations(conn):
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT * FROM locations;
+            """
+            )
+            column_names = [desc[0] for desc in cur.description]
+
+            locations = cur.fetchall();
+
+            # converting tuple into dict
+            result = [
+                dict(zip(column_names, location))
+                for location in locations
+            ]
+
+            return result
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        return None
