@@ -64,17 +64,12 @@ def forecast_locations():
     conn.close()
 
 def schedule_job():
-    print("Creating scheduler")
-
     scheduler = BlockingScheduler()
-    scheduler.add_job(forecast_locations, 'interval', seconds = 10)
-
-    print("Starting scheduler")
+    scheduler.add_job(forecast_locations, 'interval', min = 10)
 
     scheduler.start()
 
 def main():
-    print("hell")
     schedule_job()
 
 

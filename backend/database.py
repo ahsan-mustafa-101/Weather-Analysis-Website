@@ -74,6 +74,11 @@ def insert_forecasts(conn, location_id, forecast_records):
 
     try:
         with conn.cursor() as cur:
+            cur.execute(
+            "DELETE FROM forecasts WHERE location_id = %s",
+            (location_id,)
+            )
+
             for record in forecast_records:
                 cur.execute(query, (location_id, record["time"], record["temperature"]))
         conn.commit()
