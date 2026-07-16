@@ -1,6 +1,7 @@
 import api_fetch
 from database import fetch_locations, insert_forecasts, get_connection
-from apscheduler.schedulers.blocking import BlockingScheduler
+
+from apscheduler.schedulers.background import BackgroundScheduler
 
 def forecast_locations():
     conn = get_connection()
@@ -40,14 +41,10 @@ def forecast_locations():
     conn.close()
 
 def schedule_job():
-    scheduler = BlockingScheduler()
-    scheduler.add_job(forecast_locations, 'interval', min = 10)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(forecast_locations, 'interval', minutes = 10)
 
     scheduler.start()
 
-def main():
-    schedule_job()
+    return scheduler
 
-
-if __name__ =='__main__':
-    main()

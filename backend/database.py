@@ -1,12 +1,14 @@
 import psycopg
-
+from dotenv import load_dotenv
+import os
 
 # ----------- database related functions related
 
+load_dotenv()
+
 def get_connection():
     try:
-        conn = psycopg.connect("postgresql://postgres:meowmeow@localhost:5432/weather-analysis")
-        return conn
+        return psycopg.connect(os.getenv("DATABASE_URL"))
     except psycopg.OperationalError as e:
         print(f"Could not connect to database: {e}")
         return None

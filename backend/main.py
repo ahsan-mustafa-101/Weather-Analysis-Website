@@ -1,116 +1,183 @@
-import sys
-import database
+from fastapi import FastAPI, Query, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+
+
+from scheduler import schedule_job
+from database import get_connection, fetch_locations, insert_location, insert_forecasts
 import api_fetch
 
-BASE_URL = "https://geocoding-api.open-meteo.com/v1/"
 
 
-def get_city() -> str:
-    while True:
-        inp = input("Enter the city to search weather forecast: ").strip()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler_instance = schedule_job()
 
-        if inp == "":
-            print("Please enter a city name.")
-            continue
+    yield
 
-        if any(char.isalpha() for char in inp):
-            return inp
-
-        print("Please enter a valid city name.")
-            
-
-
-def get_input_number() -> int:
-    while True:
-        inp = input("Enter the number of city to get forecast: ").strip()
-
-        if inp == "":
-            print("Input cannot be empty!")
-            continue
-
-        try:
-            return int(inp)
-        except ValueError:
-            print("Please enter a valid integer!")
+    scheduler_instance.shutdown()
 
 
 
+app = FastAPI(lifespan= lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+    allow_credentials=False,
+)
 
 
-def main():
-    conn = database.get_connection()
+@app.get("/locations")
+def get_locations():
+    conn = get_connection()
     if conn is None:
+        raise HTTPException(status_code=503, detail="Could not connect to database.")
+
+    try:
+        return fetch_locations(conn)
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred."
+        )
+
+    finally:
         conn.close()
-        sys.exit()
 
-    database.create_tables(conn)
 
-    searched_city = get_city()
+@app.get("/locations/search")
+def get_searched_locations(city: str = Query(alias="location")):
+    try:
+        data = api_fetch.get_geo_data(city)
 
-    geo_data = api_fetch.get_geo_data(searched_city)
-    if geo_data is None:
+        if data is None:
+            raise HTTPException(
+                status_code=502,
+                detail="Failed to reach geocoding service."
+            )
+
+        if "results" not in data or len(data["results"]) == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="No matching locations found."
+            )
+
+        locations = api_fetch.parse_geo(data)
+        return locations
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"API Error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve location data."
+        )
+
+
+@app.post("/locations/save")
+def save_location(
+    name: str = Query(...),
+    latitude: float = Query(...),
+    longitude: float = Query(...),
+):
+    conn = get_connection()
+    if conn is None:
+        raise HTTPException(status_code=503, detail="Could not connect to database.")
+
+    try:
+        location_id = insert_location(conn, name, latitude, longitude)
+        if location_id is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to save location."
+            )
+
+        forecast_data = api_fetch.get_forecast_data(latitude, longitude)
+        if forecast_data is None:
+            raise HTTPException(
+                status_code=502,
+                detail="Location saved, but failed to fetch forecast."
+            )
+
+        parsed_forecast = api_fetch.parse_forecast(forecast_data)
+        if parsed_forecast is None:
+            raise HTTPException(
+                status_code=502,
+                detail="Location saved, but forecast data was unavailable."
+            )
+
+        insert_forecasts(conn, location_id, parsed_forecast)
+
+        return {"location_id": location_id, "name": name, "saved": True}
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred."
+        )
+
+    finally:
         conn.close()
-        sys.exit()
 
-    if "results" not in geo_data:
-        print("No result found for searched city!")
+
+@app.get("/forecasts/{location_id}")
+def get_forecasts(location_id: int):
+    return get_forecast_from_database(location_id)
+
+
+def get_forecast_from_database(location_id):
+    conn = get_connection()
+    if conn is None:
+        raise HTTPException(status_code=503, detail="Could not connect to database.")
+
+    try:
+        with conn.cursor() as cur:
+            query = """
+                    SELECT timestamp, temperature FROM forecasts WHERE location_id = %s;
+            """
+
+            cur.execute(query, (location_id,))
+            column_names = [desc[0] for desc in cur.description]
+
+            forecasts = cur.fetchall()
+
+            if not forecasts:
+                raise HTTPException(
+                    status_code=404,
+                    detail="No forecasts found for this location."
+                )
+
+            result = [
+                dict(zip(column_names, forecast))
+                for forecast in forecasts
+            ]
+            return result
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred."
+        )
+
+    finally:
         conn.close()
-        sys.exit()
-
-    if len(geo_data["results"]) == 0:
-        print("No city found!")
-        conn.close()
-        sys.exit()
-
-    locations = api_fetch.parse_geo(geo_data)
-
-    count = 0
-    for location in locations:
-        print(f"{count + 1}: | {location["location_id"]} | {location["name"]} | {location["latitude"]} | {location["longitude"]}")
-        print("-" * 50)
-        count += 1
 
 
-    while True:
-        required_city = get_input_number()
-        if (required_city <= 0) or (required_city > len(locations)):
-            print("Enter a valid number to search!!!")
-            continue
-        break
-
-    chosen = locations[required_city - 1]
-    name, latitude, longitude = chosen["name"] ,chosen["latitude"], chosen["longitude"]
-
-    forecast_data = api_fetch.get_forecast_data(latitude, longitude)
-
-    if forecast_data is None:
-        conn.close()
-        sys.exit()
-    
-    values = api_fetch.parse_forecast(forecast_data)
-
-    if values is None:
-        print("Forecast data is unavailable.")
-        conn.close()
-        sys.exit()
-
-    print("-" * 25 + " Forecast " + "-" * 25)
-    for record in values:
-        print(f"{record["time"]} : {record["temperature"]}\n")
-    print("-" * 50)
-
-
-    # saving into database
-    db_location_id = database.insert_location(conn, name, latitude, longitude)
-    if db_location_id is None:
-        print("Could not save location to database.")
-        conn.close()
-        sys.exit()
-
-    database.insert_forecasts(conn, db_location_id, values)
-    print(f"Saved {len(values)} forecast records for {name} to the database.")
-
-    conn.close()
-
-if __name__ == "__main__":
-    main()

@@ -1,7 +1,8 @@
 import requests
-import math
 from datetime import datetime, timezone
-from main import BASE_URL
+
+
+BASE_URL = "https://geocoding-api.open-meteo.com/v1/"
 
 def get_geo_data(searched_city):
     url = f"{BASE_URL}search?name={searched_city}&count=10&language=en&format=json"    
@@ -18,7 +19,7 @@ def get_geo_data(searched_city):
 
 
 def get_forecast_data(lat, lon):
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m&forecast_days=1&format=json&timeformat=unixtime"
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m&forecast_days=2&format=json&timeformat=unixtime"
     
 
     try:
@@ -53,17 +54,24 @@ def parse_forecast(data):
     if ("hourly" not in data) or ("temperature_2m" not in data["hourly"]):
         return None
 
+    now = datetime.now(timezone.utc)
+
     values = []
     for time, temp in zip(
         data["hourly"]["time"],
         data["hourly"]["temperature_2m"]
     ):
         time = datetime.fromtimestamp(time, tz= timezone.utc)
-        temp = math.ceil(temp)
+        if time <= now:
+            continue
+
+        temp = round(temp, 1)
+
         values.append(
         {
             "time" : time,
             "temperature" : temp
         }
         )
-    return values
+
+    return values[:24]
