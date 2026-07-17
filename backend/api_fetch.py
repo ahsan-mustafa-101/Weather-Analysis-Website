@@ -19,8 +19,7 @@ def get_geo_data(searched_city):
 
 
 def get_forecast_data(lat, lon):
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m&forecast_days=2&format=json&timeformat=unixtime"
-    
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature&timezone=auto&forecast_days=3&timeformat=unixtime&format=json"
 
     try:
         response = requests.get(url, timeout=15)
@@ -51,27 +50,55 @@ def parse_geo(geo_data):
 
 
 def parse_forecast(data):
-    if ("hourly" not in data) or ("temperature_2m" not in data["hourly"]):
+    if "hourly" not in data:
         return None
+
+    required_fields = [
+        "time",
+        "temperature_2m",
+        "apparent_temperature",
+        "weather_code",
+        "is_day",
+        "precipitation_probability",
+    ]
+
+    missing_fields = [
+        field for field in required_fields
+        if field not in data["hourly"]
+    ]
+
+    if missing_fields:
+        raise ValueError(
+            f"Missing required hourly fields: {', '.join(missing_fields)}"
+        )
 
     now = datetime.now(timezone.utc)
 
     values = []
-    for time, temp in zip(
+    for time, temp, app_temp, weather_code, is_day, pp in zip(
         data["hourly"]["time"],
-        data["hourly"]["temperature_2m"]
+        data["hourly"]["temperature_2m"],
+        data["hourly"]["apparent_temperature"],
+        data["hourly"]["weather_code"],
+        data["hourly"]["is_day"],
+        data["hourly"]["precipitation_probability"]
     ):
+    
         time = datetime.fromtimestamp(time, tz= timezone.utc)
         if time <= now:
             continue
 
-        temp = round(temp, 1)
 
         values.append(
         {
             "time" : time,
-            "temperature" : temp
+            "temperature" : temp,
+            "apparent_temperature" : app_temp,
+            "weather_code" : weather_code,
+            "is_day" : bool(is_day),
+            "precipitation_probability" : pp
         }
         )
+        
 
     return values[:24]

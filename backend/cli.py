@@ -105,7 +105,7 @@ def main():
 
     print("-" * 25 + " Forecast " + "-" * 25)
     for record in values:
-        print(f"{record["time"]} : {record["temperature"]}\n")
+        print(f"{record["time"]} : {record["temperature"]} : {record["apparent_temperature"]} : {record["weather_code"]} : {record["precipitation_probability"]} : {record["is_day"]}\n")
     print("-" * 50)
 
 

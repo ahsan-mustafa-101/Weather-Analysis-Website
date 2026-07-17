@@ -31,7 +31,11 @@ def create_tables(conn):
         id SERIAL PRIMARY KEY,
         location_id INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
         timestamp TIMESTAMPTZ NOT NULL,
-        temperature DECIMAL(5, 2),
+        temperature DECIMAL(5,2),
+        feels_like DECIMAL(5,2),
+        weather_code INTEGER,
+        precipitation_probability INTEGER,
+        is_day BOOLEAN,
         UNIQUE (location_id, timestamp)
     );
     """
@@ -68,10 +72,15 @@ def insert_location(conn, name, lat, lon):
 
 def insert_forecasts(conn, location_id, forecast_records):
     query = """
-    INSERT INTO forecasts (location_id, timestamp, temperature)
-    VALUES (%s, %s, %s)
+    INSERT INTO forecasts (location_id, timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (location_id, timestamp) DO UPDATE
-        SET temperature = EXCLUDED.temperature;
+        SET 
+            temperature = EXCLUDED.temperature,
+            feels_like = EXCLUDED.feels_like,
+            weather_code = EXCLUDED.weather_code,
+            precipitation_probability = EXCLUDED.precipitation_probability,
+            is_day = EXCLUDED.is_day;
     """
 
     try:
@@ -82,7 +91,7 @@ def insert_forecasts(conn, location_id, forecast_records):
             )
 
             for record in forecast_records:
-                cur.execute(query, (location_id, record["time"], record["temperature"]))
+                cur.execute(query, (location_id, record["time"], record["temperature"], record["apparent_temperature"], record["weather_code"], record["precipitation_probability"], record["is_day"]))
         conn.commit()
     except psycopg.Error as e:
         conn.rollback()
