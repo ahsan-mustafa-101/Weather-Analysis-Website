@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens for the Observatory / Weather Garden aesthetic.
+ * The site is deliberately dark-only (no light-mode branch) — the
+ * whole premise is an evening observatory, so a light theme would
+ * work against the brief rather than being a neutral fallback.
+ *
+ * Palette:
+ *   --color-navy      #0B1220  deep navy, page base
+ *   --color-charcoal  #151A24  panel/glass base
+ *   --color-slate     #3B4A6B  structural blue, borders/dividers
+ *   --color-mist      #F5F7FA  primary text (soft white, not pure)
+ *   --color-fog       #9AA5B8  secondary/muted text
+ * Weather-driven accents (selected per condition via weatherTheme.ts):
+ *   --color-accent-gold    #E8B865  sunny / clear-day
+ *   --color-accent-ice     #A8D8EC  snow
+ *   --color-accent-cool    #6FA8DC  rain
+ *   --color-accent-storm   #8B7BC7  storm
+ *   --color-accent-aurora  #5EEAD4  clear-night
+ *   --color-accent-mist    #9AA5B8  cloudy / fog (neutral)
+ */
+:root {
+  --color-navy: #0b1220;
+  --color-charcoal: #151a24;
+  --color-slate: #3b4a6b;
+  --color-mist: #f5f7fa;
+  --color-fog: #9aa5b8;
+
+  --color-accent-gold: #e8b865;
+  --color-accent-ice: #a8d8ec;
+  --color-accent-cool: #6fa8dc;
+  --color-accent-storm: #8b7bc7;
+  --color-accent-aurora: #5eead4;
+  --color-accent-mist: #9aa5b8;
+
+  --background: var(--color-navy);
+  --foreground: var(--color-mist);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-navy: var(--color-navy);
+  --color-charcoal: var(--color-charcoal);
+  --color-slate: var(--color-slate);
+  --color-mist: var(--color-mist);
+  --color-fog: var(--color-fog);
+
+  --color-accent-gold: var(--color-accent-gold);
+  --color-accent-ice: var(--color-accent-ice);
+  --color-accent-cool: var(--color-accent-cool);
+  --color-accent-storm: var(--color-accent-storm);
+  --color-accent-aurora: var(--color-accent-aurora);
+  --color-accent-mist: var(--color-accent-mist);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
