@@ -1,65 +1,197 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { AlertTriangle, CloudOff, Loader2, Settings } from "lucide-react";
+import SearchBar from "@/components/SearchBar";
+import CurrentWeatherHero from "@/components/CurrentWeatherHero";
+import ForecastStrip from "@/components/ForecastStrip";
+import GlassPanel from "@/components/GlassPanel";
+import BackgroundToggle from "@/components/BackgroundToggle";
+import SceneBackground from "@/components/background/SceneBackground";
+import { getForecast, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
+import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
+import { getWeatherTheme } from "@/lib/weatherTheme";
+
+type ViewState =
+  | { status: "loading" }
+  | { status: "empty" } // no saved locations at all yet
+  | { status: "gathering"; location: SavedLocation } // saved, but scheduler hasn't populated a forecast yet
+  | { status: "ready"; location: SavedLocation; current: ForecastEntry; upcoming: ForecastEntry[] }
+  | { status: "error"; message: string };
 
 export default function Home() {
+  const [view, setView] = useState<ViewState>({ status: "loading" });
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [backgroundEnabled, setBackgroundEnabled] = useState(true);
+
+  // Calm default scene while there's no live weather to react to yet
+  // (loading / empty / gathering / error states).
+  const theme =
+    view.status === "ready"
+      ? getWeatherTheme(view.current.weather_code, view.current.is_day)
+      : { scene: "clear-night" as const, effects: [] as const };
+
+  // Initial load: most recently saved location, per Stage 0 decision.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInitial() {
+      try {
+        const locations = await getLocations();
+        const defaultLocation = pickDefaultLocation(locations);
+        if (!defaultLocation) {
+          if (!cancelled) setView({ status: "empty" });
+          return;
+        }
+
+        const forecast = await getForecast(defaultLocation.id);
+        if (cancelled) return;
+
+        if (!forecast || forecast.length === 0) {
+          setView({ status: "gathering", location: defaultLocation });
+          return;
+        }
+
+        const [current, ...upcoming] = forecast;
+        setView({ status: "ready", location: defaultLocation, current, upcoming });
+      } catch (err) {
+        if (!cancelled) {
+          setView({
+            status: "error",
+            message:
+              err instanceof ApiError
+                ? err.message
+                : "Something went wrong loading the weather.",
+          });
+        }
+      }
+    }
+
+    loadInitial();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function handleSelectLocation(result: LocationResult) {
+    setIsSelecting(true);
+    try {
+      const saved = await saveLocation({
+        name: result.name,
+        latitude: result.latitude,
+        longitude: result.longitude,
+      });
+      const location: SavedLocation = {
+        id: saved.location_id,
+        name: saved.name,
+        latitude: result.latitude,
+        longitude: result.longitude,
+      };
+
+      const forecast = await getForecast(location.id);
+      if (!forecast || forecast.length === 0) {
+        setView({ status: "gathering", location });
+        return;
+      }
+
+      const [current, ...upcoming] = forecast;
+      setView({ status: "ready", location, current, upcoming });
+    } catch (err) {
+      setView({
+        status: "error",
+        message:
+          err instanceof ApiError
+            ? err.message
+            : "Couldn't save that location. Try again.",
+      });
+    } finally {
+      setIsSelecting(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex min-h-screen flex-col items-center gap-10 px-6 py-10 sm:px-10 sm:py-12 lg:px-16">
+      <SceneBackground scene={theme.scene} effects={[...theme.effects]} enabled={backgroundEnabled} />
+
+      <nav className="flex w-full max-w-6xl items-center justify-between">
+        <span className="font-mono text-sm uppercase tracking-[0.3em] text-fog">Weather</span>
+        <div className="flex items-center gap-1">
+          <BackgroundToggle
+            enabled={backgroundEnabled}
+            onToggle={() => setBackgroundEnabled((v) => !v)}
+          />
+          {/* Stubbed per Stage 0: non-functional for v1. */}
+          <button
+            type="button"
+            aria-label="Settings"
+            className="rounded-full p-2 text-fog transition-colors hover:bg-white/[0.06] hover:text-mist"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Settings className="h-5 w-5" strokeWidth={1.5} />
+          </button>
         </div>
+      </nav>
+
+      <SearchBar onSelect={handleSelectLocation} isSelecting={isSelecting} />
+
+      <main className="flex w-full max-w-6xl flex-1 flex-col items-center gap-10">
+        {view.status === "loading" && <LoadingState />}
+        {view.status === "empty" && <EmptyState />}
+        {view.status === "gathering" && <GatheringState location={view.location} />}
+        {view.status === "error" && <ErrorState message={view.message} />}
+        {view.status === "ready" && (
+          <>
+            <CurrentWeatherHero location={view.location} current={view.current} />
+            <ForecastStrip entries={view.upcoming} />
+          </>
+        )}
       </main>
+
+      <footer className="w-full max-w-6xl py-4 text-center font-mono text-xs text-fog/50">
+        Data via Open-Meteo
+      </footer>
     </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <GlassPanel className="flex w-full flex-col items-center gap-4 py-24 text-fog">
+      <Loader2 className="h-6 w-6 animate-spin" strokeWidth={1.5} />
+      <p className="font-light">Reading the sky...</p>
+    </GlassPanel>
+  );
+}
+
+function EmptyState() {
+  return (
+    <GlassPanel className="flex w-full flex-col items-center gap-3 py-24 text-center">
+      <CloudOff className="h-8 w-8 text-fog" strokeWidth={1.25} />
+      <p className="text-lg font-light text-mist">No location yet</p>
+      <p className="max-w-sm font-light text-fog">
+        Search for a city above to see its current weather and 24-hour forecast.
+      </p>
+    </GlassPanel>
+  );
+}
+
+function GatheringState({ location }: { location: SavedLocation }) {
+  return (
+    <GlassPanel className="flex w-full flex-col items-center gap-3 py-24 text-center">
+      <Loader2 className="h-8 w-8 animate-spin text-fog" strokeWidth={1.25} />
+      <p className="text-lg font-light text-mist">Gathering weather for {location.name}</p>
+      <p className="max-w-sm font-light text-fog">
+        This location was just saved — its forecast will be ready in a moment.
+      </p>
+    </GlassPanel>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <GlassPanel className="flex w-full flex-col items-center gap-3 py-24 text-center">
+      <AlertTriangle className="h-8 w-8 text-accent-storm" strokeWidth={1.25} />
+      <p className="text-lg font-light text-mist">Couldn&apos;t load the weather</p>
+      <p className="max-w-sm font-light text-fog">{message}</p>
+    </GlassPanel>
   );
 }
