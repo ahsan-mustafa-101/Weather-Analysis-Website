@@ -114,6 +114,6 @@ http://localhost:3000
 - Add new features
 
 ## Author 
-Ahsan Mustafa
-Computer Science Student
+**Ahsan Mustafa** ⭐<br>
+Computer Science Student<br>
 Github: https://github.com/ahsan-mustafa-101
