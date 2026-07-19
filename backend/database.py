@@ -85,6 +85,7 @@ def insert_forecasts(conn, location_id, forecast_records):
 
     try:
         with conn.cursor() as cur:
+            # temporary deletion, until I add analysis/charts stuff
             cur.execute(
             "DELETE FROM forecasts WHERE location_id = %s",
             (location_id,)
