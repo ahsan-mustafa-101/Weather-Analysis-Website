@@ -1,5 +1,6 @@
 import GlassPanel from "./GlassPanel";
-import WeatherIcon from "./WeatherIcon";
+import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
+import CountUpNumber from "./CountUpNumber";
 import { ForecastEntry, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import { ACCENT_CLASSES } from "@/lib/accentClasses";
@@ -40,10 +41,12 @@ export default function CurrentWeatherHero({
         </p>
 
         <div className="flex items-end gap-4">
-          <span className="text-[clamp(4.5rem,10vw,8rem)] font-thin leading-none tracking-tight text-mist">
-            {formatTemp(current.temperature)}
-          </span>
-          <WeatherIcon
+          <CountUpNumber
+            value={current.temperature}
+            format={formatTemp}
+            className="text-[clamp(4.5rem,10vw,8rem)] font-thin leading-none tracking-tight text-mist"
+          />
+          <AnimatedWeatherIcon
             name={theme.icon}
             className={`mb-3 h-14 w-14 shrink-0 ${ACCENT_CLASSES[theme.accent].text}`}
             strokeWidth={1}
@@ -53,7 +56,7 @@ export default function CurrentWeatherHero({
         <div className="flex flex-col gap-1">
           <p className="text-xl font-light text-mist">{theme.label}</p>
           <p className="text-sm font-light text-fog">
-            Feels like {formatTemp(current.feels_like)}
+            Feels like <CountUpNumber value={current.feels_like} format={formatTemp} />
           </p>
         </div>
       </div>

@@ -8,6 +8,7 @@ import ForecastStrip from "@/components/ForecastStrip";
 import GlassPanel from "@/components/GlassPanel";
 import BackgroundToggle from "@/components/BackgroundToggle";
 import SceneBackground from "@/components/background/SceneBackground";
+import Earth3D from "@/components/Earth3D";
 import { getForecast, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
@@ -124,7 +125,7 @@ export default function Home() {
           <button
             type="button"
             aria-label="Settings"
-            className="rounded-full p-2 text-fog transition-colors hover:bg-white/[0.06] hover:text-mist"
+            className="rounded-full p-2 text-fog transition-all duration-150 hover:bg-white/[0.06] hover:text-mist active:scale-90"
           >
             <Settings className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -140,7 +141,11 @@ export default function Home() {
         {view.status === "error" && <ErrorState message={view.message} />}
         {view.status === "ready" && (
           <>
-            <CurrentWeatherHero location={view.location} current={view.current} />
+            <CurrentWeatherHero
+              location={view.location}
+              current={view.current}
+              earthSlot={<Earth3D targetLongitude={view.location.longitude} />}
+            />
             <ForecastStrip entries={view.upcoming} />
           </>
         )}

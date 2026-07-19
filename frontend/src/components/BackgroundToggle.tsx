@@ -14,7 +14,7 @@ export default function BackgroundToggle({ enabled, onToggle }: BackgroundToggle
       onClick={onToggle}
       aria-label={enabled ? "Disable wallpaper" : "Enable wallpaper"}
       aria-pressed={enabled}
-      className="rounded-full p-2 text-fog transition-colors hover:bg-white/[0.06] hover:text-mist"
+      className="rounded-full p-2 text-fog transition-all duration-150 hover:bg-white/[0.06] hover:text-mist active:scale-90"
     >
       {enabled ? (
         <ImageIcon className="h-5 w-5" strokeWidth={1.5} />

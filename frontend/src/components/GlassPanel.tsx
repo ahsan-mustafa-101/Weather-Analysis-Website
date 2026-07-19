@@ -4,6 +4,8 @@ import clsx from "clsx";
 interface GlassPanelProps extends HTMLAttributes<HTMLDivElement> {
   /** Renders a slightly stronger blur/border for surfaces that float above other glass (e.g. dropdowns). */
   elevated?: boolean;
+  /** Subtle periodic light sweep across the surface. On by default; turn off for very small/dense panels where it'd be too busy. */
+  shimmer?: boolean;
 }
 
 /**
@@ -15,6 +17,7 @@ interface GlassPanelProps extends HTMLAttributes<HTMLDivElement> {
  */
 export default function GlassPanel({
   elevated = false,
+  shimmer = true,
   className,
   children,
   ...rest
@@ -22,13 +25,23 @@ export default function GlassPanel({
   return (
     <div
       className={clsx(
-        "rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl",
+        "relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl",
         "shadow-[0_8px_32px_rgba(0,0,0,0.25)]",
         elevated && "border-white/15 bg-white/[0.09] shadow-[0_16px_48px_rgba(0,0,0,0.35)]",
         className
       )}
       {...rest}
     >
+      {shimmer && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 animate-[shimmer-sweep_9s_ease-in-out_infinite]"
+          style={{
+            background:
+              "linear-gradient(75deg, transparent 40%, rgba(255,255,255,0.05) 48%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.05) 52%, transparent 60%)",
+          }}
+        />
+      )}
       {children}
     </div>
   );

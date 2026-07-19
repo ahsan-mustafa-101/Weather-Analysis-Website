@@ -1,4 +1,7 @@
+"use client";
+
 import { AnimationEffect, SceneCategory } from "@/lib/weatherTheme";
+import { usePointerParallax } from "@/lib/usePointerParallax";
 import SceneStack from "./SceneStack";
 import WeatherEffectsLayer from "./WeatherEffectsLayer";
 
@@ -17,6 +20,8 @@ interface SceneBackgroundProps {
  * the rain/snow canvases and rAF loops aren't running for nothing.
  */
 export default function SceneBackground({ scene, effects, enabled }: SceneBackgroundProps) {
+  const parallax = usePointerParallax(16);
+
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-navy">
       <div
@@ -26,7 +31,12 @@ export default function SceneBackground({ scene, effects, enabled }: SceneBackgr
           filter: enabled ? "blur(0px)" : "blur(28px)",
         }}
       >
-        <SceneStack scene={scene} />
+        <div
+          className="absolute inset-[-20px]"
+          style={{ transform: `translate3d(${parallax.x}px, ${parallax.y}px, 0)` }}
+        >
+          <SceneStack scene={scene} />
+        </div>
         <WeatherEffectsLayer effects={enabled ? effects : []} />
       </div>
 

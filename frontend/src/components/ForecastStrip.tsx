@@ -1,6 +1,6 @@
 import { Droplets } from "lucide-react";
 import GlassPanel from "./GlassPanel";
-import WeatherIcon from "./WeatherIcon";
+import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import { ForecastEntry } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import { ACCENT_CLASSES } from "@/lib/accentClasses";
@@ -20,29 +20,38 @@ export default function ForecastStrip({ entries }: ForecastStripProps) {
         24-Hour Forecast
       </h2>
       <div className="flex w-full gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
-        {entries.map((entry) => {
+        {entries.map((entry, index) => {
           const theme = getWeatherTheme(entry.weather_code, entry.is_day);
           const accent = ACCENT_CLASSES[theme.accent];
           return (
             <GlassPanel
               key={entry.timestamp}
-              className={`group flex shrink-0 flex-col items-center gap-3 px-5 py-6 transition-all duration-300 ease-out hover:-translate-y-1.5 ${accent.hoverBorder} ${accent.hoverGlow}`}
-              style={{ minWidth: "104px" }}
+              shimmer={false}
+              className={`forecast-card-enter group flex shrink-0 flex-col items-center gap-3 px-5 py-6 transition-all duration-300 ease-out hover:-translate-y-1.5 ${accent.hoverBorder} ${accent.hoverGlow}`}
+              style={{
+                minWidth: "104px",
+                animationDelay: `${index * 45}ms`,
+              }}
             >
-              <span className="font-mono text-xs text-fog">
-                {formatHourLabel(entry.timestamp)}
-              </span>
-              <WeatherIcon
-                name={theme.icon}
-                className={`h-8 w-8 transition-transform duration-300 group-hover:scale-110 ${accent.text}`}
-                strokeWidth={1.25}
-              />
-              <span className="text-2xl font-light text-mist">
-                {formatTemp(entry.temperature)}
-              </span>
-              <div className="flex items-center gap-1 text-xs font-light text-fog">
-                <Droplets className="h-3 w-3" strokeWidth={1.5} />
-                <span>{entry.precipitation_probability}%</span>
+              <div
+                className="flex flex-col items-center gap-3 animate-[card-float_ease-in-out_infinite]"
+                style={{ animationDuration: "5s", animationDelay: `${index * 220}ms` }}
+              >
+                <span className="font-mono text-xs text-fog">
+                  {formatHourLabel(entry.timestamp)}
+                </span>
+                <AnimatedWeatherIcon
+                  name={theme.icon}
+                  className={`h-8 w-8 transition-transform duration-300 group-hover:scale-110 ${accent.text}`}
+                  strokeWidth={1.25}
+                />
+                <span className="text-2xl font-light text-mist">
+                  {formatTemp(entry.temperature)}
+                </span>
+                <div className="flex items-center gap-1 text-xs font-light text-fog">
+                  <Droplets className="h-3 w-3" strokeWidth={1.5} />
+                  <span>{entry.precipitation_probability}%</span>
+                </div>
               </div>
             </GlassPanel>
           );

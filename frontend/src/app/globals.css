@@ -131,6 +131,62 @@ body {
     }
   }
 
+  @keyframes icon-morph-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+  @keyframes card-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @keyframes slide-up-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer-sweep {
+    from {
+      transform: translateX(-120%) skewX(-15deg);
+    }
+    to {
+      transform: translateX(220%) skewX(-15deg);
+    }
+  }
+
+  /*
+  * Forecast card entrance. Deliberately a plain named class rather
+  * than a Tailwind animate-[...] arbitrary value combined with a
+  * separate `opacity-0` utility: that combination (base opacity-0
+  * utility + a same-property animation + a competing `transition-all`)
+  * left cards stuck invisible after their entrance delay in testing.
+  * `animation-fill-mode: backwards` alone is what we actually need —
+  * it holds the 0% keyframe (opacity 0) during the animation-delay,
+  * then hands off cleanly to normal (non-animated, fully opaque)
+  * styles once the animation finishes, with nothing left fighting it.
+  */
+  .forecast-card-enter {
+    animation: slide-up-fade-in 600ms ease-out backwards;
+  }
+  
   /* Respect reduced-motion system-wide: every transition/animation collapses to
     effectively instant rather than each component needing its own branch. */
   @media (prefers-reduced-motion: reduce) {
