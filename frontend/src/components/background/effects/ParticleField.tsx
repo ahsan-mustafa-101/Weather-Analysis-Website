@@ -57,8 +57,14 @@ export default function ParticleField({ kind }: ParticleFieldProps) {
     }
 
     function seedParticles(width: number, height: number) {
-      const density = kind === "rain" ? 0.00016 : 0.00009;
-      const cap = kind === "rain" ? 220 : 140;
+      // Mobile devices generally pair smaller screens with weaker
+      // GPUs — fewer particles still reads as "raining"/"snowing"
+      // at that size, and it's meaningfully cheaper per frame.
+      const isMobileViewport = width < 640;
+      const mobileScale = isMobileViewport ? 0.55 : 1;
+
+      const density = (kind === "rain" ? 0.00016 : 0.00009) * mobileScale;
+      const cap = Math.round((kind === "rain" ? 220 : 140) * mobileScale);
       const count = Math.min(Math.round(width * height * density), cap);
 
       particlesRef.current = Array.from({ length: count }, () =>

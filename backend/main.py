@@ -89,13 +89,15 @@ def save_location(
     name: str = Query(...),
     latitude: float = Query(...),
     longitude: float = Query(...),
+    country: str = Query(...),
+    admin1 : str = Query(...),
 ):
     conn = get_connection()
     if conn is None:
         raise HTTPException(status_code=503, detail="Could not connect to database.")
 
     try:
-        location_id = insert_location(conn, name, latitude, longitude)
+        location_id = insert_location(conn, name, latitude, longitude, country, admin1)
         if location_id is None:
             raise HTTPException(
                 status_code=500,

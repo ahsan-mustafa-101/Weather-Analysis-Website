@@ -52,10 +52,13 @@ def create_tables(conn):
 
 def insert_location(conn, name, lat, lon):
     query = """
-    INSERT INTO locations (name, latitude, longitude)
-    VALUES (%s, %s, %s)
+    INSERT INTO locations (name, latitude, longitude, country, admin1)
+    VALUES (%s, %s, %s, %s, %s)
     ON CONFLICT (name, latitude, longitude) DO UPDATE
-        SET name = EXCLUDED.name
+        SET 
+            name = EXCLUDED.name
+            country = EXCLUDED.country
+            admin1 = EXCLUDED.admin1
     RETURNING id;
     """
     try:
