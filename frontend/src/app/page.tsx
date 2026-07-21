@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { AlertTriangle, CloudOff, Loader2 } from "lucide-react";
+import { AlertTriangle, CloudOff, Loader2} from "lucide-react";
+import { FaGithub, FaLinkedin, FaInstagram } from "react-icons/fa";
 import SearchBar from "@/components/SearchBar";
 import CurrentWeatherHero from "@/components/CurrentWeatherHero";
 import ForecastStrip from "@/components/ForecastStrip";
@@ -158,9 +159,45 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="w-full max-w-6xl py-4 text-center font-mono text-xs text-fog/50">
-        Data via Open-Meteo
-      </footer>
+      <footer className="mt-16 w-full max-w-6xl border-t border-white/5 py-8">
+      <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+        <p className="font-mono text-xs text-fog/50">
+          · Built by Ahsan Mustafa
+        </p>
+
+        <div className="flex items-center gap-4">
+          <a
+            href="https://github.com/ahsan-mustafa-101"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            className="text-fog/60 transition-colors duration-150 hover:text-mist"
+          >
+            <FaGithub className="h-5 w-5" />
+          </a>
+
+          <a
+            href="https://www.linkedin.com/in/ahsan-mustafa101/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            className="text-fog/60 transition-colors duration-150 hover:text-mist"
+          >
+            <FaLinkedin className="h-5 w-5" />
+          </a>
+
+          <a
+            href="https://www.instagram.com/__ahsanmustafa/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className="text-fog/60 transition-colors duration-150 hover:text-mist"
+          >
+            <FaInstagram className="h-5 w-5" />
+          </a>
+        </div>
+      </div>
+    </footer>
     </div>
   );
 }

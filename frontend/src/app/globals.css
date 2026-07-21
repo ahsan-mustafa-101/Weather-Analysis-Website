@@ -59,6 +59,30 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Global page scrollbar */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: var(--color-navy);
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: var(--color-slate);
+  border-radius: 9999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fog);
+}
+
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -172,6 +196,24 @@ body {
     }
   }
 
+
+  /*
+   * Custom scrollbar for the horizontal forecast strip — matches the
+   * glass/dark theme instead of the browser default. Firefox uses
+   * `scrollbar-color` (set inline on the element itself via
+   * [scrollbar-width:thin] + [scrollbar-color:...]); everything else
+   * needs the ::-webkit-scrollbar-* pseudo-elements, which Tailwind
+   * has no utilities for.
+   */
+  /*
+ * Observatory glass scrollbar
+ * Works in Chrome, Brave, Edge, Opera and other Chromium browsers.
+ */
+  
+}
+
+
+
   /*
   * Forecast card entrance. Deliberately a plain named class rather
   * than a Tailwind animate-[...] arbitrary value combined with a
@@ -198,4 +240,5 @@ body {
       transition-duration: 0.01ms !important;
     }
   }
-}
+
+

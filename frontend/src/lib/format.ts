@@ -81,8 +81,19 @@ export function formatLocationLabel(
   country?: string | null
 ): string {
   const parts = [name];
-  if (admin1) parts.push(admin1);
-  if (country) parts.push(country);
+
+  // Don't repeat the region if it's the same as the city name.
+  if (
+    admin1 &&
+    admin1.trim().toLowerCase() !== name.trim().toLowerCase()
+  ) {
+    parts.push(admin1);
+  }
+
+  if (country) {
+    parts.push(country);
+  }
+
   return parts.join(", ");
 }
 

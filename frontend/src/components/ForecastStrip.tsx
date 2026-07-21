@@ -19,7 +19,7 @@ export default function ForecastStrip({ entries }: ForecastStripProps) {
       <h2 className="mb-4 px-1 text-sm font-light uppercase tracking-[0.2em] text-fog">
         24-Hour Forecast
       </h2>
-      <div className="flex w-full gap-4 overflow-x-auto pb-4 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin]">
+      <div className="themed-scrollbar flex w-full gap-4 overflow-x-auto py-4 [-webkit-overflow-scrolling:touch] [scrollbar-width:thin] [scrollbar-color:var(--color-slate)_transparent]">
         {entries.map((entry, index) => {
           const theme = getWeatherTheme(entry.weather_code, entry.is_day);
           const accent = ACCENT_CLASSES[theme.accent];
