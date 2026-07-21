@@ -42,7 +42,6 @@ def parse_geo(geo_data):
         lon = geo_data["results"][index]["longitude"]
         country = geo_data["results"][index].get("country")
         admin1 = geo_data["results"][index].get("admin1")
-    
         locations.append(
             {
                 "location_id" : location_id, "name" : name, "latitude" : lat, "longitude" : lon, "country" : country, "admin1" : admin1,
