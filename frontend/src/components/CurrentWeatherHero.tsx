@@ -4,7 +4,7 @@ import CountUpNumber from "./CountUpNumber";
 import { ForecastEntry, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import { ACCENT_CLASSES } from "@/lib/accentClasses";
-import { formatLocationDate, formatLocationTime, formatTemp } from "@/lib/format";
+import { formatLocationDate, formatLocationLabel, formatLocationTime, formatTemp } from "@/lib/format";
 
 interface CurrentWeatherHeroProps {
   location: SavedLocation;
@@ -30,10 +30,11 @@ export default function CurrentWeatherHero({
       className="grid w-full grid-cols-1 items-center gap-8 p-8 sm:p-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:p-16"
     >
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2 text-sm font-light tracking-wide text-fog">
-          <span>{location.name}</span>
-          <span className="text-fog/40">•</span>
-          <span className="font-mono text-xs">{formatLocationTime(current.timestamp)}</span>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-xl font-light leading-snug tracking-wide text-mist sm:text-2xl">
+            {formatLocationLabel(location.name, location.admin1, location.country)}
+          </h1>
+          <p className="font-mono text-xs text-fog">{formatLocationTime(current.timestamp)}</p>
         </div>
 
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-fog/70">
@@ -61,7 +62,7 @@ export default function CurrentWeatherHero({
         </div>
       </div>
 
-      <div className="relative flex min-h-[280px] items-center justify-center lg:min-h-[380px]">
+      <div className="relative flex min-h-[320px] items-center justify-center lg:min-h-[440px]">
         {earthSlot ?? (
           <div className="h-full w-full rounded-2xl border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent" />
         )}

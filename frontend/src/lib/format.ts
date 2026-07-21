@@ -69,6 +69,23 @@ export function formatLocationDate(timestamp: string): string {
   });
 }
 
+/**
+ * "Lahore, Punjab, Pakistan" — falls back to "Lahore, Pakistan" if
+ * admin1 (region/state) is null, and just "Lahore" if country is
+ * also null. Shared by the search dropdown and the hero so both
+ * follow the exact same fallback rule.
+ */
+export function formatLocationLabel(
+  name: string,
+  admin1?: string | null,
+  country?: string | null
+): string {
+  const parts = [name];
+  if (admin1) parts.push(admin1);
+  if (country) parts.push(country);
+  return parts.join(", ");
+}
+
 /** Rounds a decimal temperature to a whole number for display, e.g. 34.0 -> "34°". */
 export function formatTemp(value: number): string {
   return `${Math.round(value)}°`;

@@ -17,7 +17,7 @@ interface EarthCanvasProps {
 export default function EarthCanvas({ targetLongitude }: EarthCanvasProps) {
   return (
     <Canvas
-      camera={{ position: [0, 0, 3.1], fov: 40 }}
+      camera={{ position: [0, 0, 5.1], fov: 37 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       dpr={[1, 1.75]}
     >

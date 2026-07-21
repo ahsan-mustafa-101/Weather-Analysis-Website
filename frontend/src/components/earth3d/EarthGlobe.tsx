@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { ThreeEvent } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { atmosphereFragmentShader, atmosphereVertexShader } from "@/lib/atmosphereShader";
 import { useAnimationGate } from "@/lib/useAnimationGate";
 
 const IDLE_SPIN_SPEED = 0.063; // rad/sec, ~ one full turn every ~100s
 const CLOUDS_EXTRA_SPIN = 0.012; // rad/sec, drifts slightly faster than the surface
 const ROTATE_DAMPING = 3; // higher = snappier arrival when rotating to a searched city
-const TILT_DAMPING = 4;
-const PULSE_DAMPING = 5;
-const GLOW_COLOR = "#5eead4"; // matches the app's aurora accent
+const TILT_DAMPING = 5;
+const GLOBE_SCALE = 1.6; // overall size bump — was reading too small in the hero
+const HIT_AREA_RADIUS = 2.4; // invisible sphere for a generous hover/click target beyond the visible surface
 
 interface EarthGlobeProps {
   targetLongitude: number | null;
@@ -23,9 +23,10 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
   const tiltGroupRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
 
-  const targetRotationRef = useRef(0); // continuously-accumulating absolute target angle
+  const targetRotationRef = useRef(0);
   const isHoveredRef = useRef(false);
-  const pulseRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const lastPointerXRef = useRef(0);
 
   const active = useAnimationGate();
   const activeRef = useRef(active);
@@ -59,10 +60,7 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
     }) as unknown as (texture: Record<"day" | "normal" | "specular" | "clouds" | "lights", THREE.Texture>) => void
   );
 
-  const atmosphereUniforms = useMemo(
-    () => ({ glowColor: { value: new THREE.Color(GLOW_COLOR) } }),
-    []
-  );
+  // Rotate toward the searched city's longitude. Nudges the
 
   // Rotate toward the searched city's longitude. Nudges the
   // accumulating target by the shortest angular path rather than
@@ -81,7 +79,7 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
   useFrame((state, delta) => {
     if (!activeRef.current) return;
 
-    if (!isHoveredRef.current) {
+    if (!isHoveredRef.current && !isDraggingRef.current) {
       targetRotationRef.current += IDLE_SPIN_SPEED * delta;
     }
 
@@ -99,8 +97,8 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
     }
 
     if (tiltGroupRef.current) {
-      const targetTiltX = isHoveredRef.current ? -state.pointer.y * 0.15 : 0;
-      const targetTiltZ = isHoveredRef.current ? state.pointer.x * 0.1 : 0;
+      const targetTiltX = isHoveredRef.current ? -state.pointer.y * 0.4 : 0;
+      const targetTiltZ = isHoveredRef.current ? state.pointer.x * 0.3 : 0;
       tiltGroupRef.current.rotation.x = THREE.MathUtils.damp(
         tiltGroupRef.current.rotation.x,
         targetTiltX,
@@ -114,8 +112,6 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
         delta
       );
 
-      pulseRef.current = THREE.MathUtils.damp(pulseRef.current, 0, PULSE_DAMPING, delta);
-      tiltGroupRef.current.scale.setScalar(1 + pulseRef.current * 0.08);
     }
   });
 
@@ -127,18 +123,44 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
     isHoveredRef.current = false;
     document.body.style.cursor = "auto";
   }
-  function handleClick() {
-    pulseRef.current = 1;
+  function handlePointerDown(e: ThreeEvent<PointerEvent>) {
+    isDraggingRef.current = true;
+    lastPointerXRef.current = e.clientX;
+    (e.target as HTMLElement)?.setPointerCapture?.(e.pointerId);
   }
 
+  function handlePointerUp() {
+    isDraggingRef.current = false;
+  }
+
+  function handlePointerMove(e: ThreeEvent<PointerEvent>) {
+    if (!isDraggingRef.current) return;
+    const deltaX = e.clientX - lastPointerXRef.current;
+    lastPointerXRef.current = e.clientX;
+    targetRotationRef.current += deltaX * 0.012;
+  }
+  
+
   return (
-    <group ref={spinGroupRef}>
+    <group ref={spinGroupRef} scale={GLOBE_SCALE}>
       <group
         ref={tiltGroupRef}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
-        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerMove={handlePointerMove}
       >
+        {/* Invisible, larger-than-visible-surface hit target: hover/click
+            now respond within this radius rather than only when the
+            cursor is precisely over the rendered sphere. Placed first
+            but has zero visual effect (fully transparent, no depth
+            write) — it exists purely for raycasting. */}
+        <mesh>
+          <sphereGeometry args={[HIT_AREA_RADIUS, 24, 24]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} depthTest={false} />
+        </mesh>
+
         {/* Surface */}
         <mesh>
           <sphereGeometry args={[1, 64, 64]} />
@@ -167,20 +189,6 @@ export default function EarthGlobe({ targetLongitude }: EarthGlobeProps) {
         <mesh ref={cloudsRef} scale={1.015}>
           <sphereGeometry args={[1, 64, 64]} />
           <meshLambertMaterial map={clouds} transparent opacity={0.85} depthWrite={false} />
-        </mesh>
-
-        {/* Atmosphere glow */}
-        <mesh scale={1.12}>
-          <sphereGeometry args={[1, 64, 64]} />
-          <shaderMaterial
-            vertexShader={atmosphereVertexShader}
-            fragmentShader={atmosphereFragmentShader}
-            uniforms={atmosphereUniforms}
-            blending={THREE.AdditiveBlending}
-            side={THREE.BackSide}
-            transparent
-            depthWrite={false}
-          />
         </mesh>
       </group>
     </group>

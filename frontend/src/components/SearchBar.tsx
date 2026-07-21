@@ -5,6 +5,7 @@ import { Loader2, MapPin, Search } from "lucide-react";
 import GlassPanel from "./GlassPanel";
 import { searchLocations } from "@/lib/api";
 import { LocationResult } from "@/lib/types";
+import { formatLocationLabel } from "@/lib/format";
 
 interface SearchBarProps {
   /** Called when the user picks a result. Parent owns save + forecast fetch. */
@@ -130,11 +131,10 @@ export default function SearchBar({
                   onClick={() => handleSelect(result)}
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors hover:bg-white/[0.08]"
                 >
-                  <MapPin
-                    className="h-4 w-4 shrink-0 text-fog"
-                    strokeWidth={1.5}
-                  />
-                  <span className="font-light text-mist">{result.name}</span>
+                  <MapPin className="h-4 w-4 shrink-0 text-fog" strokeWidth={1.5} />
+                  <span className="font-light text-mist">
+                    {formatLocationLabel(result.name, result.admin1, result.country)}
+                  </span>
                 </button>
               </li>
             ))}

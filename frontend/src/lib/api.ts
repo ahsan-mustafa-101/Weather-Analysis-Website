@@ -68,6 +68,8 @@ export async function searchLocations(query: string): Promise<LocationResult[]> 
       name: r.name,
       latitude: r.latitude,
       longitude: r.longitude,
+      admin1: r.admin1,
+      country: r.country,
     }));
   } catch (err) {
     if (err instanceof ApiError && err.kind === "not_found") return [];

@@ -15,6 +15,10 @@ export interface SavedLocation {
   name: string;
   latitude: number;
   longitude: number;
+  /** Region/state, e.g. "Punjab". Backend may return null. */
+  admin1?: string | null;
+  /** e.g. "Pakistan". Backend may return null. */
+  country?: string | null;
 }
 
 /** A geocoding search candidate (from GET /locations/search), pre-normalization. */
@@ -23,6 +27,8 @@ export interface RawSearchResult {
   name: string;
   latitude: number;
   longitude: number;
+  admin1?: string | null;
+  country?: string | null;
 }
 
 /** A geocoding search candidate, normalized to match SavedLocation's `id` field. */
@@ -31,6 +37,8 @@ export interface LocationResult {
   name: string;
   latitude: number;
   longitude: number;
+  admin1?: string | null;
+  country?: string | null;
 }
 
 /** Response from POST /locations/save. */

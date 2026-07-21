@@ -1,12 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
-import { AlertTriangle, CloudOff, Loader2, Settings } from "lucide-react";
+import { AlertTriangle, CloudOff, Loader2 } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import CurrentWeatherHero from "@/components/CurrentWeatherHero";
 import ForecastStrip from "@/components/ForecastStrip";
 import GlassPanel from "@/components/GlassPanel";
 import BackgroundToggle from "@/components/BackgroundToggle";
+import SettingsMenu from "@/components/SettingsMenu";
 import SceneBackground from "@/components/background/SceneBackground";
 import Earth3D from "@/components/Earth3D";
 import { getForecast, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
@@ -87,6 +89,8 @@ export default function Home() {
         name: saved.name,
         latitude: result.latitude,
         longitude: result.longitude,
+        admin1: result.admin1,
+        country: result.country,
       };
 
       const forecast = await getForecast(location.id);
@@ -115,20 +119,23 @@ export default function Home() {
       <SceneBackground scene={theme.scene} effects={[...theme.effects]} enabled={backgroundEnabled} />
 
       <nav className="flex w-full max-w-6xl items-center justify-between">
-        <span className="font-mono text-sm uppercase tracking-[0.3em] text-fog">Weather</span>
+        <div className="flex items-center gap-2.5">
+        <Image
+        src="/favicon.ico"
+        alt=""
+        width={24}
+        height={24}
+        className="rounded-md"
+        />
+        <span className="font-mono text-sm uppercase tracking-[0.3em] text-fog">WeatherDrop</span>
+        </div>
         <div className="flex items-center gap-1">
           <BackgroundToggle
             enabled={backgroundEnabled}
             onToggle={() => setBackgroundEnabled((v) => !v)}
           />
-          {/* Stubbed per Stage 0: non-functional for v1. */}
-          <button
-            type="button"
-            aria-label="Settings"
-            className="rounded-full p-2 text-fog transition-all duration-150 hover:bg-white/[0.06] hover:text-mist active:scale-90"
-          >
-            <Settings className="h-5 w-5" strokeWidth={1.5} />
-          </button>
+          {/* Real dropdown now — see SettingsMenu.tsx (still placeholder content per Stage 0, but no longer a dead button). */}
+          <SettingsMenu />
         </div>
       </nav>
 
