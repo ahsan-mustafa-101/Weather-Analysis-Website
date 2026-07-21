@@ -27,7 +27,7 @@ app = FastAPI(lifespan= lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "https://weatherdrop-backend.onrender.com"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
     allow_credentials=False,
