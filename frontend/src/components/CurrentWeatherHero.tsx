@@ -3,7 +3,6 @@ import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import CountUpNumber from "./CountUpNumber";
 import { ForecastEntry, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
-import { ACCENT_CLASSES } from "@/lib/accentClasses";
 import { formatLocationDate, formatLocationLabel, formatLocationTime, formatTemp } from "@/lib/format";
 
 interface CurrentWeatherHeroProps {
@@ -47,11 +46,7 @@ export default function CurrentWeatherHero({
             format={formatTemp}
             className="text-[clamp(4.5rem,10vw,8rem)] font-thin leading-none tracking-tight text-mist"
           />
-          <AnimatedWeatherIcon
-            name={theme.icon}
-            className={`mb-3 h-14 w-14 shrink-0 ${ACCENT_CLASSES[theme.accent].text}`}
-            strokeWidth={1}
-          />
+          <AnimatedWeatherIcon name={theme.icon} className="mb-3 h-14 w-14 shrink-0" />
         </div>
 
         <div className="flex flex-col gap-1">

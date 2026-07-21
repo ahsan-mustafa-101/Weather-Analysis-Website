@@ -42,8 +42,7 @@ export default function ForecastStrip({ entries }: ForecastStripProps) {
                 </span>
                 <AnimatedWeatherIcon
                   name={theme.icon}
-                  className={`h-8 w-8 transition-transform duration-300 group-hover:scale-110 ${accent.text}`}
-                  strokeWidth={1.25}
+                  className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
                 />
                 <span className="text-2xl font-light text-mist">
                   {formatTemp(entry.temperature)}

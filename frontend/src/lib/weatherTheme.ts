@@ -40,7 +40,12 @@ export type AnimationEffect =
 export interface WeatherTheme {
   scene: SceneCategory;
   accent: AccentToken;
-  /** Lucide icon name (Stage 2 will map this to the actual <Icon />). */
+  /**
+   * Key into the custom icon set — see src/components/WeatherIcon.tsx
+   * for the full name -> PNG asset map. Kept as a plain string here
+   * (not the asset type) so this file has no dependency on the icon
+   * implementation or image imports.
+   */
   icon: string;
   effects: AnimationEffect[];
   /** Human label for the weather description line in the hero. */
@@ -56,14 +61,26 @@ export function getWeatherTheme(
   weatherCode: number,
   isDay: boolean
 ): WeatherTheme {
+  // Thunderstorm with hail — icy precipitation, so the "thunder +
+  // snow/ice" asset fits better than a plain storm icon.
+  if (weatherCode >= 96) {
+    return {
+      scene: "storm",
+      accent: "accent-storm",
+      icon: "thundering-with-snow",
+      effects: ["lightning", "rain"],
+      label: "Thunderstorm with hail",
+    };
+  }
+
   // Thunderstorm
   if (weatherCode >= 95) {
     return {
       scene: "storm",
       accent: "accent-storm",
-      icon: "CloudLightning",
+      icon: isDay ? "sun-with-thunder" : "moon-with-thundering",
       effects: ["lightning", "rain"],
-      label: weatherCode >= 96 ? "Thunderstorm with hail" : "Thunderstorm",
+      label: "Thunderstorm",
     };
   }
 
@@ -72,7 +89,7 @@ export function getWeatherTheme(
     return {
       scene: "snow",
       accent: "accent-ice",
-      icon: "CloudSnow",
+      icon: isDay ? "snowing" : "moon-with-snow",
       effects: ["snow"],
       label: "Snow showers",
     };
@@ -83,7 +100,7 @@ export function getWeatherTheme(
     return {
       scene: "rain",
       accent: "accent-cool",
-      icon: "CloudRainWind",
+      icon: isDay ? "sun-with-rain" : "moon-with-rain",
       effects: ["rain"],
       label: "Rain showers",
     };
@@ -94,66 +111,101 @@ export function getWeatherTheme(
     return {
       scene: "snow",
       accent: "accent-ice",
-      icon: "CloudSnow",
+      icon: "snowing",
       effects: ["snow"],
       label: weatherCode === 77 ? "Snow grains" : "Snowfall",
     };
   }
 
-  // Rain / freezing rain
-  if (weatherCode >= 61 && weatherCode <= 67) {
+  // Freezing rain — icy, same "rain + snow" asset as freezing drizzle
+  if (weatherCode >= 66 && weatherCode <= 67) {
     return {
       scene: "rain",
       accent: "accent-cool",
-      icon: "CloudRain",
+      icon: "snow-with-rain",
       effects: ["rain"],
-      label: weatherCode >= 66 ? "Freezing rain" : "Rain",
+      label: "Freezing rain",
     };
   }
 
-  // Drizzle / freezing drizzle
-  if (weatherCode >= 51 && weatherCode <= 57) {
+  // Rain
+  if (weatherCode >= 61 && weatherCode <= 65) {
     return {
       scene: "rain",
       accent: "accent-cool",
-      icon: "CloudDrizzle",
+      icon: "raining-with-wind",
       effects: ["rain"],
-      label: weatherCode >= 56 ? "Freezing drizzle" : "Drizzle",
+      label: "Rain",
     };
   }
 
-  // Fog
+  // Freezing drizzle
+  if (weatherCode >= 56 && weatherCode <= 57) {
+    return {
+      scene: "rain",
+      accent: "accent-cool",
+      icon: "snow-with-rain",
+      effects: ["rain"],
+      label: "Freezing drizzle",
+    };
+  }
+
+  // Drizzle
+  if (weatherCode >= 51 && weatherCode <= 55) {
+    return {
+      scene: "rain",
+      accent: "accent-cool",
+      icon: "raining",
+      effects: ["rain"],
+      label: "Drizzle",
+    };
+  }
+
+  // Fog — sky fully obscured, so no sun/moon/star accent either way
   if (weatherCode === 45 || weatherCode === 48) {
     return {
       scene: "fog",
       accent: "accent-mist",
-      icon: "CloudFog",
+      icon: "cloud",
       effects: ["fog-layers"],
       label: weatherCode === 48 ? "Depositing rime fog" : "Fog",
     };
   }
 
-  // Overcast
+  // Overcast — same reasoning as fog: nothing celestial is visible
   if (weatherCode === 3) {
     return {
       scene: "cloudy",
       accent: "accent-mist",
-      icon: "Cloud",
+      icon: "cloud",
       effects: ["drifting-clouds"],
       label: "Overcast",
     };
   }
 
-  // Partly cloudy / mainly clear
-  if (weatherCode === 1 || weatherCode === 2) {
+  // Partly cloudy
+  if (weatherCode === 2) {
     return {
       scene: isDay ? "clear-day" : "clear-night",
       accent: isDay ? "accent-gold" : "accent-aurora",
-      icon: isDay ? "CloudSun" : "CloudMoon",
+      icon: isDay ? "sun-with-clouds" : "moon-with-clouds",
       effects: isDay
         ? ["sun-rays", "drifting-clouds"]
         : ["aurora", "drifting-clouds"],
-      label: weatherCode === 1 ? "Mainly clear" : "Partly cloudy",
+      label: "Partly cloudy",
+    };
+  }
+
+  // Mainly clear
+  if (weatherCode === 1) {
+    return {
+      scene: isDay ? "clear-day" : "clear-night",
+      accent: isDay ? "accent-gold" : "accent-aurora",
+      icon: isDay ? "sun-with-wind" : "moon-with-stars-and-wind",
+      effects: isDay
+        ? ["sun-rays", "drifting-clouds"]
+        : ["aurora", "drifting-clouds"],
+      label: "Mainly clear",
     };
   }
 
@@ -161,7 +213,7 @@ export function getWeatherTheme(
   return {
     scene: isDay ? "clear-day" : "clear-night",
     accent: isDay ? "accent-gold" : "accent-aurora",
-    icon: isDay ? "Sun" : "Moon",
+    icon: isDay ? "sun" : "moon-with-stars",
     effects: isDay ? ["sun-rays"] : ["aurora"],
     label: "Clear sky",
   };
