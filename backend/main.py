@@ -4,13 +4,17 @@ from contextlib import asynccontextmanager
 
 
 from scheduler import schedule_job
-from database import get_connection, fetch_locations, insert_location, insert_forecasts
+from database import get_connection, fetch_locations, insert_location, insert_forecasts, create_tables
 import api_fetch
 
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    conn = get_connection()
+    if conn:
+        create_tables(conn)
+        conn.close()
     scheduler_instance = schedule_job()
 
     yield
