@@ -22,6 +22,8 @@ def create_tables(conn):
         name VARCHAR(100) NOT NULL,
         latitude DECIMAL(9, 6) NOT NULL,
         longitude DECIMAL(9, 6) NOT NULL,
+        country VARCHAR(255),
+        admin1 VARCHAR(255),
         UNIQUE (name, latitude, longitude)
     );
     """
@@ -50,20 +52,20 @@ def create_tables(conn):
         print(f"Error creating tables: {e}")
 
 
-def insert_location(conn, name, lat, lon):
+def insert_location(conn, name, lat, lon, country, admin1):
     query = """
     INSERT INTO locations (name, latitude, longitude, country, admin1)
     VALUES (%s, %s, %s, %s, %s)
     ON CONFLICT (name, latitude, longitude) DO UPDATE
         SET 
-            name = EXCLUDED.name
-            country = EXCLUDED.country
+            name = EXCLUDED.name,
+            country = EXCLUDED.country,
             admin1 = EXCLUDED.admin1
     RETURNING id;
     """
     try:
         with conn.cursor() as cur:
-            cur.execute(query, (name, lat, lon))
+            cur.execute(query, (name, lat, lon, country, admin1))
             location_id = cur.fetchone()[0]
         conn.commit()
         return location_id

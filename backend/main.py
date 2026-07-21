@@ -89,8 +89,8 @@ def save_location(
     name: str = Query(...),
     latitude: float = Query(...),
     longitude: float = Query(...),
-    country: str = Query(...),
-    admin1 : str = Query(...),
+    country: str = Query(None),
+    admin1 : str = Query(None),
 ):
     conn = get_connection()
     if conn is None:
