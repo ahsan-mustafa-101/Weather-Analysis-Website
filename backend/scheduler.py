@@ -42,7 +42,7 @@ def forecast_locations():
 
 def schedule_job():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(forecast_locations, 'interval', minutes = 30)
+    scheduler.add_job(forecast_locations, 'interval', minutes = 10)
 
     scheduler.start()
 

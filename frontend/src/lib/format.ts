@@ -90,7 +90,12 @@ export function formatLocationLabel(
     parts.push(admin1);
   }
 
-  if (country) {
+  // Don't repeat the country if it's the same as the city name
+  // (happens with city-states like Singapore).
+  if (
+    country &&
+    country.trim().toLowerCase() !== name.trim().toLowerCase()
+  ) {
     parts.push(country);
   }
 

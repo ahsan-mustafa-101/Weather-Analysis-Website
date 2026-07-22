@@ -125,3 +125,24 @@ def fetch_locations(conn):
     except Exception as e:
         print(f"Unexpected Error: {e}")
         return None
+
+
+def get_location_by_id(conn, location_id):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, name, latitude, longitude FROM locations WHERE id = %s;",
+                (location_id,)
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return {
+                "id": row[0],
+                "name": row[1],
+                "latitude": row[2],
+                "longitude": row[3],
+            }
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        return None

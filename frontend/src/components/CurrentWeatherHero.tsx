@@ -3,7 +3,7 @@ import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import CountUpNumber from "./CountUpNumber";
 import { ForecastEntry, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
-import { formatLocationDate, formatLocationLabel, formatLocationTime, formatTemp } from "@/lib/format";
+import { formatLocationDate, formatLocationLabel, formatLocationTime, formatTemp} from "@/lib/format";
 
 interface CurrentWeatherHeroProps {
   location: SavedLocation;

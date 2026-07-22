@@ -99,7 +99,9 @@ def parse_forecast(data):
             "is_day" : bool(is_day),
             "precipitation_probability" : pp
         }
+        
         )
+
         
 
     return values[:24]
