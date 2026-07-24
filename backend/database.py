@@ -24,6 +24,7 @@ def create_tables(conn):
         longitude DECIMAL(9, 6) NOT NULL,
         country VARCHAR(255),
         admin1 VARCHAR(255),
+        utc_offset_seconds INT,
         UNIQUE (name, latitude, longitude)
     );
     """
@@ -131,7 +132,7 @@ def get_location_by_id(conn, location_id):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, name, latitude, longitude FROM locations WHERE id = %s;",
+                "SELECT id, name, latitude, longitude, utc_offset_seconds FROM locations WHERE id = %s;",
                 (location_id,)
             )
             row = cur.fetchone()
@@ -142,6 +143,7 @@ def get_location_by_id(conn, location_id):
                 "name": row[1],
                 "latitude": row[2],
                 "longitude": row[3],
+                "utc_offset_seconds": row[4],
             }
     except Exception as e:
         print(f"Unexpected Error: {e}")

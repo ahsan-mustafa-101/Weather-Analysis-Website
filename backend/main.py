@@ -118,6 +118,7 @@ def save_location(
             )
 
         offset_seconds = api_fetch.get_utc_offset(forecast_data)
+        print(offset_seconds)
         update_location_offset(conn, location_id, offset_seconds)
 
         parsed_forecast = api_fetch.parse_forecast(forecast_data)
