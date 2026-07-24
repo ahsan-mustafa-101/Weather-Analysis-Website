@@ -2,9 +2,9 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-
+from datetime import datetime, timezone
 from scheduler import schedule_job
-from database import get_connection, fetch_locations, insert_location, insert_forecasts, create_tables
+from database import get_connection, fetch_locations, insert_location, insert_forecasts, create_tables, get_location_by_id
 import api_fetch
 
 
@@ -153,38 +153,51 @@ def get_forecast_from_database(location_id):
         raise HTTPException(status_code=503, detail="Could not connect to database.")
 
     try:
-        with conn.cursor() as cur:
-            query = """
-                    SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day
-                    FROM forecasts WHERE location_id = %s ORDER BY timestamp ASC;
-            """
+        def fetch_rows():
+            with conn.cursor() as cur:
+                query = """
+                        SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day
+                        FROM forecasts WHERE location_id = %s ORDER BY timestamp ASC;
+                """
+                cur.execute(query, (location_id,))
+                column_names = [desc[0] for desc in cur.description]
+                rows = cur.fetchall()
+                return [dict(zip(column_names, row)) for row in rows]
 
-            cur.execute(query, (location_id,))
-            column_names = [desc[0] for desc in cur.description]
+        forecasts = fetch_rows()
 
-            forecasts = cur.fetchall()
+        is_stale = (
+            not forecasts
+            or forecasts[0]["timestamp"] < datetime.now(timezone.utc)
+        )
 
-            if not forecasts:
-                raise HTTPException(
-                    status_code=404,
-                    detail="No forecasts found for this location."
-                )
+        if is_stale:
+            location = get_location_by_id(conn, location_id)
+            if location is None:
+                raise HTTPException(status_code=404, detail="Location not found.")
 
-            result = [
-                dict(zip(column_names, forecast))
-                for forecast in forecasts
-            ]
-            return result
+            forecast_data = api_fetch.get_forecast_data(location["latitude"], location["longitude"])
+            if forecast_data is None:
+                raise HTTPException(status_code=502, detail="Failed to refresh forecast data.")
+
+            parsed_forecast = api_fetch.parse_forecast(forecast_data)
+            if parsed_forecast is None:
+                raise HTTPException(status_code=502, detail="Forecast data was unavailable.")
+
+            insert_forecasts(conn, location_id, parsed_forecast)
+            forecasts = fetch_rows()
+
+        if not forecasts:
+            raise HTTPException(status_code=404, detail="No forecasts found for this location.")
+
+        return forecasts
 
     except HTTPException:
         raise
 
     except Exception as e:
         print(f"Unexpected Error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred."
-        )
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
     finally:
         conn.close()
