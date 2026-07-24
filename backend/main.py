@@ -2,9 +2,9 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from scheduler import schedule_job
-from database import get_connection, fetch_locations, insert_location, insert_forecasts, create_tables, get_location_by_id
+from database import get_connection, fetch_locations, insert_location, insert_forecasts, create_tables, get_location_by_id, update_location_offset
 import api_fetch
 
 
@@ -117,6 +117,9 @@ def save_location(
                 detail="Location saved, but failed to fetch forecast."
             )
 
+        offset_seconds = api_fetch.get_utc_offset(forecast_data)
+        update_location_offset(conn, location_id, offset_seconds)
+
         parsed_forecast = api_fetch.parse_forecast(forecast_data)
         if parsed_forecast is None:
             raise HTTPException(
@@ -180,6 +183,9 @@ def get_forecast_from_database(location_id):
             if forecast_data is None:
                 raise HTTPException(status_code=502, detail="Failed to refresh forecast data.")
 
+            offset_seconds = api_fetch.get_utc_offset(forecast_data)
+            update_location_offset(conn, location_id, offset_seconds)
+
             parsed_forecast = api_fetch.parse_forecast(forecast_data)
             if parsed_forecast is None:
                 raise HTTPException(status_code=502, detail="Forecast data was unavailable.")
@@ -189,6 +195,14 @@ def get_forecast_from_database(location_id):
 
         if not forecasts:
             raise HTTPException(status_code=404, detail="No forecasts found for this location.")
+
+
+        location = get_location_by_id(conn, location_id)  
+        offset = timedelta(seconds=location.get("utc_offset_seconds") or 0)
+        tz = timezone(offset)
+
+        for row in forecasts:
+            row["timestamp"] = row["timestamp"].astimezone(tz).isoformat()
 
         return forecasts
 

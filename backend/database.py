@@ -146,3 +146,16 @@ def get_location_by_id(conn, location_id):
     except Exception as e:
         print(f"Unexpected Error: {e}")
         return None
+
+
+def update_location_offset(conn, location_id, utc_offset_seconds):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE locations SET utc_offset_seconds = %s WHERE id = %s;",
+                (utc_offset_seconds, location_id)
+            )
+        conn.commit()
+    except psycopg.Error as e:
+        conn.rollback()
+        print(f"Error updating location offset: {e}")

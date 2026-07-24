@@ -104,3 +104,7 @@ def parse_forecast(data):
         
 
     return values[:24]
+
+
+def get_utc_offset(data):
+    return data.get("utc_offset_seconds", 0)
