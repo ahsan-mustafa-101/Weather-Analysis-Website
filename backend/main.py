@@ -13,8 +13,10 @@ import api_fetch
 async def lifespan(app: FastAPI):
     conn = get_connection()
     if conn:
-        create_tables(conn)
-        conn.close()
+        try:
+            create_tables(conn)
+        finally:
+            conn.close()
     scheduler_instance = schedule_job()
 
     yield
