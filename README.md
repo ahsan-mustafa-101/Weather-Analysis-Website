@@ -107,6 +107,11 @@ The frontend runs on:
 http://localhost:3000
 ```
 
+## Deployment
+- Backend & database is deployed on **Render** 
+- Frontend is deployed on **Vercel**
+- Check out the deployed application : **https://weatherdrop.vercel.app/**
+  
 ## Future Improvements
 - Data Analytics Charts/Graphs
 - AI chat bot
