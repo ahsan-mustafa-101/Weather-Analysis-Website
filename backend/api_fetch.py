@@ -73,7 +73,7 @@ def parse_forecast(data):
             f"Missing required hourly fields: {', '.join(missing_fields)}"
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(minute = 0, second = 0, microsecond = 0)
 
     values = []
     for time, temp, app_temp, weather_code, is_day, pp in zip(
@@ -86,9 +86,8 @@ def parse_forecast(data):
     ):
     
         time = datetime.fromtimestamp(time, tz= timezone.utc)
-        if time <= now:
+        if time < now:
             continue
-
 
         values.append(
         {
