@@ -2,7 +2,31 @@
 A full stack weather forecasting web application that allows users to search locations & view 24-hour weather forecasts using the Open-Meteo API.
 
 ## Preview
-(will add soon)
+<p align="center">
+  <img width="1918" height="862" alt="Home Page" src="https://github.com/user-attachments/assets/e3b0c36e-506d-4910-be09-07bb3e8cc7fc" />
+</p>
+   
+<p align="center">
+  <em>Figure 1: WeatherDrop home page startup interface</em>
+</p>
+<br>
+
+<p align="center">
+  <img width="1917" height="901" alt="image" src="https://github.com/user-attachments/assets/5f29d331-8128-47dc-a567-e7613e4bcf29" />
+</p>
+
+<p align="center">
+  <em>Figure 2: Searched location along a 3d Earth model displayed</em>
+</p>
+
+<p align="center">
+  <img width="1917" height="601" alt="image" src="https://github.com/user-attachments/assets/d44a5ee8-450f-481c-a9d3-5fcc766e5b8e" />
+</p>
+
+<p align="center">
+  <em>Figure 3: Searched location 24-hour weather forecast results</em>
+</p>
+
 
 ## Features
 
@@ -107,6 +131,11 @@ The frontend runs on:
 http://localhost:3000
 ```
 
+## Deployment
+- Backend & database is deployed on **Render** 
+- Frontend is deployed on **Vercel**
+- Check out the deployed application : **https://weatherdrop.vercel.app/**
+  
 ## Future Improvements
 - Data Analytics Charts/Graphs
 - AI chat bot
