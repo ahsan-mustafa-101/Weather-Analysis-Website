@@ -69,7 +69,7 @@ cd weather-analysis
 ### 2. Install backend dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 ### 3. Install frontend dependencies
@@ -107,7 +107,7 @@ Used by the Next.js frontend to communicate with the backend.
 ### Start the backend
 
 ```bash
-uvicorn api_creation:app --reload
+uvicorn main:app --reload
 ```
 
 The backend runs on:
