@@ -12,6 +12,7 @@ import BackgroundToggle from "@/components/BackgroundToggle";
 import SettingsMenu from "@/components/SettingsMenu";
 import SceneBackground from "@/components/background/SceneBackground";
 import Earth3D from "@/components/Earth3D";
+import WeatherInsights from "@/components/WeatherInsights";
 import { getForecast, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
@@ -148,15 +149,16 @@ export default function Home() {
         {view.status === "gathering" && <GatheringState location={view.location} />}
         {view.status === "error" && <ErrorState message={view.message} />}
         {view.status === "ready" && (
-          <>
-            <CurrentWeatherHero
-              location={view.location}
-              current={view.current}
-              earthSlot={<Earth3D targetLongitude={view.location.longitude} />}
-            />
-            <ForecastStrip entries={view.upcoming} />
-          </>
-        )}
+        <>
+          <CurrentWeatherHero
+            location={view.location}
+            current={view.current}
+            earthSlot={<Earth3D targetLongitude={view.location.longitude} />}
+          />
+          <ForecastStrip entries={view.upcoming} />
+          <WeatherInsights current={view.current} />
+        </>
+      )}
       </main>
 
       <footer className="mt-16 w-full max-w-6xl border-t border-white/5 py-8">

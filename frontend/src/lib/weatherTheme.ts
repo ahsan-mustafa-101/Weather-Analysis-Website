@@ -218,3 +218,31 @@ export function getWeatherTheme(
     label: "Clear sky",
   };
 }
+
+/**
+ * Converts a wind direction in degrees (0-360) to a 16-point compass
+ * label (e.g. 183° -> "S"). Kept here alongside getWeatherTheme since
+ * this file already owns "translate a raw API number into a display
+ * label" for weather data.
+ */
+const COMPASS_POINTS = [
+  "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+];
+
+export function getCompassDirection(degrees: number): string {
+  const index = Math.round(degrees / 22.5) % 16;
+  return COMPASS_POINTS[index];
+}
+
+/**
+ * Standard UV index categorization bands (WHO scale). Backend sends
+ * only the raw number — this is where "4 -> Moderate" is decided.
+ */
+export function getUvCategory(uvIndex: number): string {
+  if (uvIndex < 3) return "Low";
+  if (uvIndex < 6) return "Moderate";
+  if (uvIndex < 8) return "High";
+  if (uvIndex < 11) return "Very High";
+  return "Extreme";
+}
