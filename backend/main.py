@@ -159,7 +159,7 @@ def get_forecast_from_database(location_id):
         def fetch_rows():
             with conn.cursor() as cur:
                 query = """
-                        SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day, wind, pressure, humidity, visibility, uvindex, dew_point
+                        SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day, wind, pressure, humidity, visibility, uvindex, dew_point, wind_direction
                         FROM forecasts WHERE location_id = %s ORDER BY timestamp ASC;
                 """
                 cur.execute(query, (location_id,))
@@ -169,9 +169,10 @@ def get_forecast_from_database(location_id):
 
         forecasts = fetch_rows()
 
+        now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
         is_stale = (
             not forecasts
-            or forecasts[0]["timestamp"] < datetime.now(timezone.utc)
+            or forecasts[0]["timestamp"] < now
         )
 
         if is_stale:

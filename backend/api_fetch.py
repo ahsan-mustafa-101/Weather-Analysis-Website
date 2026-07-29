@@ -19,7 +19,7 @@ def get_geo_data(searched_city):
 
 
 def get_forecast_data(lat, lon):
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature,wind_speed_10m,pressure_msl,visibility,dew_point_2m,uv_index,relative_humidity_2m&timezone=auto&forecast_days=3&timeformat=unixtime&format=json"
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature,wind_speed_10m,pressure_msl,visibility,dew_point_2m,uv_index,relative_humidity_2m,wind_direction_10m&timezone=auto&forecast_days=3&timeformat=unixtime&format=json"
 
     try:
         response = requests.get(url, timeout=15)
@@ -66,7 +66,8 @@ def parse_forecast(data):
         "visibility",
         "uv_index",
         "dew_point_2m",
-        "relative_humidity_2m"
+        "relative_humidity_2m",
+        "wind_direction_10m"
     ]
 
     missing_fields = [
@@ -82,7 +83,7 @@ def parse_forecast(data):
     now = datetime.now(timezone.utc).replace(minute = 0, second = 0, microsecond = 0)
 
     values = []
-    for time, temp, app_temp, weather_code, is_day, pp, wind, pressure, visibility, uv_index, dew_point, humidity  in zip(
+    for time, temp, app_temp, weather_code, is_day, pp, wind, pressure, visibility, uv_index, dew_point, humidity, wind_direction  in zip(
         data["hourly"]["time"],
         data["hourly"]["temperature_2m"],
         data["hourly"]["apparent_temperature"],
@@ -94,7 +95,8 @@ def parse_forecast(data):
         data["hourly"]["visibility"],
         data["hourly"]["uv_index"],
         data["hourly"]["dew_point_2m"],
-        data["hourly"]["relative_humidity_2m"]
+        data["hourly"]["relative_humidity_2m"],
+        data["hourly"]["wind_direction_10m"]
     ):
     
         time = datetime.fromtimestamp(time, tz= timezone.utc)
@@ -114,7 +116,8 @@ def parse_forecast(data):
             "visibility" : visibility,
             "uv_index" : uv_index,
             "dew_point" : dew_point,
-            "humidity" : humidity
+            "humidity" : humidity,
+            "wind_direction" : wind_direction
         }
         )
 
