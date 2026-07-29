@@ -19,7 +19,7 @@ def get_geo_data(searched_city):
 
 
 def get_forecast_data(lat, lon):
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature&timezone=auto&forecast_days=3&timeformat=unixtime&format=json"
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature,wind_speed_10m,pressure_msl,visibility,dew_point_2m,uv_index,relative_humidity_2m&timezone=auto&forecast_days=3&timeformat=unixtime&format=json"
 
     try:
         response = requests.get(url, timeout=15)
@@ -61,6 +61,12 @@ def parse_forecast(data):
         "weather_code",
         "is_day",
         "precipitation_probability",
+        "wind_speed_10m",
+        "pressure_msl",
+        "visibility",
+        "uv_index",
+        "dew_point_2m",
+        "relative_humidity_2m"
     ]
 
     missing_fields = [
@@ -76,13 +82,19 @@ def parse_forecast(data):
     now = datetime.now(timezone.utc).replace(minute = 0, second = 0, microsecond = 0)
 
     values = []
-    for time, temp, app_temp, weather_code, is_day, pp in zip(
+    for time, temp, app_temp, weather_code, is_day, pp, wind, pressure, visibility, uv_index, dew_point, humidity  in zip(
         data["hourly"]["time"],
         data["hourly"]["temperature_2m"],
         data["hourly"]["apparent_temperature"],
         data["hourly"]["weather_code"],
         data["hourly"]["is_day"],
-        data["hourly"]["precipitation_probability"]
+        data["hourly"]["precipitation_probability"],
+        data["hourly"]["wind_speed_10m"],
+        data["hourly"]["pressure_msl"],
+        data["hourly"]["visibility"],
+        data["hourly"]["uv_index"],
+        data["hourly"]["dew_point_2m"],
+        data["hourly"]["relative_humidity_2m"]
     ):
     
         time = datetime.fromtimestamp(time, tz= timezone.utc)
@@ -96,7 +108,13 @@ def parse_forecast(data):
             "apparent_temperature" : app_temp,
             "weather_code" : weather_code,
             "is_day" : bool(is_day),
-            "precipitation_probability" : pp
+            "precipitation_probability" : pp,
+            "wind" : wind,
+            "pressure" : pressure,
+            "visibility" : visibility,
+            "uv_index" : uv_index,
+            "dew_point" : dew_point,
+            "humidity" : humidity
         }
         )
 

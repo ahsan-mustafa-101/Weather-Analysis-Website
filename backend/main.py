@@ -159,7 +159,7 @@ def get_forecast_from_database(location_id):
         def fetch_rows():
             with conn.cursor() as cur:
                 query = """
-                        SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day
+                        SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day, wind, pressure, humidity, visibility, uvindex, dew_point
                         FROM forecasts WHERE location_id = %s ORDER BY timestamp ASC;
                 """
                 cur.execute(query, (location_id,))

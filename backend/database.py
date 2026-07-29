@@ -39,6 +39,12 @@ def create_tables(conn):
         weather_code INTEGER,
         precipitation_probability INTEGER,
         is_day BOOLEAN,
+        wind DECIMAL(5,2),
+        pressure DECIMAL(6,2),
+        humidity SAMLLINT,
+        visibility DECIMAL(4,2),
+        uvindex DECIMAL(6,2),
+        dew_point DECIMAL(5,2),
         UNIQUE (location_id, timestamp)
     );
     """
@@ -78,15 +84,21 @@ def insert_location(conn, name, lat, lon, country, admin1):
 
 def insert_forecasts(conn, location_id, forecast_records):
     query = """
-    INSERT INTO forecasts (location_id, timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO forecasts (location_id, timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day, wind, pressure, humidity, visibility, uvindex, dew_point)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (location_id, timestamp) DO UPDATE
         SET 
             temperature = EXCLUDED.temperature,
             feels_like = EXCLUDED.feels_like,
             weather_code = EXCLUDED.weather_code,
             precipitation_probability = EXCLUDED.precipitation_probability,
-            is_day = EXCLUDED.is_day;
+            is_day = EXCLUDED.is_day,
+            wind = EXCLUDED.wind,
+            pressure = EXCLUDED.pressure,
+            humidity = EXCLUDED.humidity,
+            visibility = EXCLUDED.visibility,
+            uvindex = EXCLUDED.uvindex,
+            dew_point = EXCLUDED.dew_point;
     """
 
     try:
@@ -98,7 +110,7 @@ def insert_forecasts(conn, location_id, forecast_records):
             )
 
             for record in forecast_records:
-                cur.execute(query, (location_id, record["time"], record["temperature"], record["apparent_temperature"], record["weather_code"], record["precipitation_probability"], record["is_day"]))
+                cur.execute(query, (location_id, record["time"], record["temperature"], record["apparent_temperature"], record["weather_code"], record["precipitation_probability"], record["is_day"], record["wind"], record["pressure"], record["humidity"], record["visibility"], record["uv_index"], record["dew_point"]))
         conn.commit()
     except psycopg.Error as e:
         conn.rollback()
