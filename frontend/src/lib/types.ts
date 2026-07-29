@@ -60,6 +60,13 @@ export interface ForecastEntry {
   weather_code: number;
   precipitation_probability: number;
   is_day: boolean;
+  wind: number;
+  wind_direction: number;
+  pressure: number;
+  humidity: number;
+  visibility: number;
+  uvindex: number;
+  dew_point: number;
 }
 
 /** Thrown by lib/api.ts for expected, UI-actionable failures (404s etc). */
