@@ -13,9 +13,11 @@ import SettingsMenu from "@/components/SettingsMenu";
 import SceneBackground from "@/components/background/SceneBackground";
 import Earth3D from "@/components/Earth3D";
 import WeatherInsights from "@/components/WeatherInsights";
-import { getForecast, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
+import WeatherAnalysis from "@/components/WeatherAnalysis";
+import { getForecast, getForecastHistory, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
+
 
 type ViewState =
   | { status: "loading" }
@@ -28,6 +30,7 @@ export default function Home() {
   const [view, setView] = useState<ViewState>({ status: "loading" });
   const [isSelecting, setIsSelecting] = useState(false);
   const [backgroundEnabled, setBackgroundEnabled] = useState(true);
+  const [history, setHistory] = useState<ForecastEntry[] | null>(null);
 
   // Calm default scene while there's no live weather to react to yet
   // (loading / empty / gathering / error states).
@@ -116,6 +119,24 @@ export default function Home() {
     }
   }
 
+
+  useEffect(() => {
+      if (view.status !== "ready") return;
+      let cancelled = false;
+
+      getForecastHistory(view.location.id)
+        .then((data) => {
+          if (!cancelled) setHistory(data);
+        })
+        .catch(() => {
+          if (!cancelled) setHistory(null);
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }, [view.status === "ready" ? view.location.id : null]);
+
   return (
     <div className="flex min-h-screen flex-col items-center gap-10 px-6 py-10 sm:px-10 sm:py-12 lg:px-16">
       <SceneBackground scene={theme.scene} effects={[...theme.effects]} enabled={backgroundEnabled} />
@@ -157,6 +178,7 @@ export default function Home() {
           />
           <ForecastStrip entries={view.upcoming} />
           <WeatherInsights current={view.current} />
+          {history && history.length > 0 && <WeatherAnalysis history={history} />}
         </>
       )}
       </main>
@@ -203,6 +225,9 @@ export default function Home() {
     </div>
   );
 }
+
+
+
 
 function LoadingState() {
   return (

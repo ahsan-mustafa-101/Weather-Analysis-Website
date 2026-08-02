@@ -115,6 +115,23 @@ export async function getForecast(
   }
 }
 
+/**
+ * Past 3 days + current hourly data for a saved location, used by
+ * the Weather Analysis charts. Returns null on "nothing stored yet"
+ * (same convention as getForecast) rather than throwing, so the UI
+ * can show a distinct loading/empty state.
+ */
+export async function getForecastHistory(
+  locationId: number
+): Promise<ForecastEntry[] | null> {
+  try {
+    return await request<ForecastEntry[]>(`/forecasts/${locationId}/history`);
+  } catch (err) {
+    if (err instanceof ApiError && err.kind === "not_found") return null;
+    throw err;
+  }
+}
+
 /** The most recently saved location, used as the default view on load. */
 export function pickDefaultLocation(
   locations: SavedLocation[]
