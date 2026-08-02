@@ -150,30 +150,36 @@ def get_forecasts(location_id: int):
     return get_forecast_from_database(location_id)
 
 
+
+@app.get("/forecasts/{location_id}/history")
+def get_historical_forecasts(location_id: int):
+    return get_historical_forecast_data_from_database(location_id)
+
+
+
+
 def get_forecast_from_database(location_id):
     conn = get_connection()
     if conn is None:
         raise HTTPException(status_code=503, detail="Could not connect to database.")
+    now = datetime.now(timezone.utc).replace(minute = 0, second = 0, microsecond = 0)
+    upper_limit = now + timedelta(hours=24)
 
     try:
         def fetch_rows():
             with conn.cursor() as cur:
                 query = """
                         SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day, wind, pressure, humidity, visibility, uvindex, dew_point, wind_direction
-                        FROM forecasts WHERE location_id = %s ORDER BY timestamp ASC;
+                        FROM forecasts WHERE location_id = %s AND timestamp >= %s  AND timestamp < %s ORDER BY timestamp ASC;
                 """
-                cur.execute(query, (location_id,))
+                cur.execute(query, (location_id, now, upper_limit,))
                 column_names = [desc[0] for desc in cur.description]
                 rows = cur.fetchall()
                 return [dict(zip(column_names, row)) for row in rows]
 
         forecasts = fetch_rows()
 
-        now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-        is_stale = (
-            not forecasts
-            or forecasts[0]["timestamp"] < now
-        )
+        is_stale = not forecasts
 
         if is_stale:
             location = get_location_by_id(conn, location_id)
@@ -218,3 +224,46 @@ def get_forecast_from_database(location_id):
         conn.close()
 
 
+def get_historical_forecast_data_from_database(location_id):
+    conn = get_connection()
+    if conn is None:
+        raise HTTPException(status_code=503, detail="Could not connect to database.")
+
+    now = datetime.now(timezone.utc)
+    try:
+        def fetch_rows():
+            with conn.cursor() as cur:
+                # No lower boundry as the insert forecasts delete + replace the whole data with fresh data everytime
+                query = """
+                        SELECT timestamp, temperature, feels_like, weather_code, precipitation_probability, is_day, wind, pressure, humidity, visibility, uvindex, dew_point, wind_direction
+                        FROM forecasts WHERE location_id = %s AND timestamp < %s ORDER BY timestamp ASC;
+                """
+                cur.execute(query, (location_id, now,))
+                column_names = [desc[0] for desc in cur.description]
+                rows = cur.fetchall()
+                return [dict(zip(column_names, row)) for row in rows]
+
+        forecasts = fetch_rows()
+
+        if not forecasts:
+            raise HTTPException(status_code=404, detail="No forecasts found for this location.")
+
+
+        location = get_location_by_id(conn, location_id)  
+        offset = timedelta(seconds=location.get("utc_offset_seconds") or 0)
+        tz = timezone(offset)
+
+        for row in forecasts:
+            row["timestamp"] = row["timestamp"].astimezone(tz).isoformat()
+
+        return forecasts
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+
+    finally:
+        conn.close()

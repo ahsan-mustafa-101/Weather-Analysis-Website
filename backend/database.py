@@ -45,6 +45,7 @@ def create_tables(conn):
         visibility DECIMAL(4,2),
         uvindex DECIMAL(6,2),
         dew_point DECIMAL(5,2),
+        wind_direction SMALLINT,
         UNIQUE (location_id, timestamp)
     );
     """
@@ -99,6 +100,7 @@ def insert_forecasts(conn, location_id, forecast_records):
             visibility = EXCLUDED.visibility,
             uvindex = EXCLUDED.uvindex,
             dew_point = EXCLUDED.dew_point;
+            wind_direction = EXCLUDED.wind_direction
     """
 
     try:

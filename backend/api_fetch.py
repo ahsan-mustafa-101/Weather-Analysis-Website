@@ -19,7 +19,7 @@ def get_geo_data(searched_city):
 
 
 def get_forecast_data(lat, lon):
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature,wind_speed_10m,pressure_msl,visibility,dew_point_2m,uv_index,relative_humidity_2m,wind_direction_10m&timezone=auto&forecast_days=3&timeformat=unixtime&format=json"
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,weather_code,is_day,precipitation_probability,apparent_temperature,wind_speed_10m,pressure_msl,visibility,dew_point_2m,uv_index,relative_humidity_2m,wind_direction_10m&timezone=auto&past_days=3&forecast_days=3&timeformat=unixtime&format=json"
 
     try:
         response = requests.get(url, timeout=15)
@@ -80,7 +80,6 @@ def parse_forecast(data):
             f"Missing required hourly fields: {', '.join(missing_fields)}"
         )
 
-    now = datetime.now(timezone.utc).replace(minute = 0, second = 0, microsecond = 0)
 
     values = []
     for time, temp, app_temp, weather_code, is_day, pp, wind, pressure, visibility, uv_index, dew_point, humidity, wind_direction  in zip(
@@ -99,10 +98,7 @@ def parse_forecast(data):
         data["hourly"]["wind_direction_10m"]
     ):
     
-        time = datetime.fromtimestamp(time, tz= timezone.utc)
-        if time < now:
-            continue
-
+        time = datetime.fromtimestamp(time, tz=timezone.utc)
         values.append(
         {
             "time" : time,
@@ -120,11 +116,7 @@ def parse_forecast(data):
             "wind_direction" : wind_direction
         }
         )
-
-        
-
-    return values[:24]
-
+    return values
 
 def get_utc_offset(data):
     return data.get("utc_offset_seconds", 0)
