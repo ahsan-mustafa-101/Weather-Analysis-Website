@@ -99,8 +99,8 @@ def insert_forecasts(conn, location_id, forecast_records):
             humidity = EXCLUDED.humidity,
             visibility = EXCLUDED.visibility,
             uvindex = EXCLUDED.uvindex,
-            dew_point = EXCLUDED.dew_point;
-            wind_direction = EXCLUDED.wind_direction
+            dew_point = EXCLUDED.dew_point
+            wind_direction = EXCLUDED.wind_direction;
     """
 
     try:

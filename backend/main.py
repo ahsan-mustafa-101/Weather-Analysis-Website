@@ -229,7 +229,7 @@ def get_historical_forecast_data_from_database(location_id):
     if conn is None:
         raise HTTPException(status_code=503, detail="Could not connect to database.")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(minute = 0, second = 0, microsecond = 0)
     try:
         def fetch_rows():
             with conn.cursor() as cur:
