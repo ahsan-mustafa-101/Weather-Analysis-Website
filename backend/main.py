@@ -146,8 +146,8 @@ def save_location(
 
 
 @app.get("/forecasts/{location_id}")
-def get_forecasts(location_id: int):
-    return get_forecast_from_database(location_id)
+def get_forecasts(location_id: int, force: bool = False):
+    return get_forecast_from_database(location_id, force)
 
 
 
@@ -158,7 +158,7 @@ def get_historical_forecasts(location_id: int):
 
 
 
-def get_forecast_from_database(location_id):
+def get_forecast_from_database(location_id, force = False):
     conn = get_connection()
     if conn is None:
         raise HTTPException(status_code=503, detail="Could not connect to database.")
@@ -181,7 +181,7 @@ def get_forecast_from_database(location_id):
 
         is_stale = not forecasts
 
-        if is_stale:
+        if force or is_stale:
             location = get_location_by_id(conn, location_id)
             if location is None:
                 raise HTTPException(status_code=404, detail="Location not found.")
