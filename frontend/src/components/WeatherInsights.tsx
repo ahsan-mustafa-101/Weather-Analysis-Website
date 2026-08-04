@@ -1,16 +1,16 @@
 "use client";
 
-import { Wind, Gauge, Droplets, Eye, Thermometer, Sun } from "lucide-react";
+import { Wind, Gauge, Droplets, Eye, Thermometer} from "lucide-react";
 import GlassPanel from "./GlassPanel";
 import { ForecastEntry } from "@/lib/types";
-import { getCompassDirection, getUvCategory } from "@/lib/weatherTheme";
-import { formatValue, UnitSystem } from "@/lib/units";
+import { getCompassDirection} from "@/lib/weatherTheme";
+import { convertWind, convertPressure, convertVisibility, convertTemperature } from "@/lib/units";
+import { useSettings } from "@/context/SettingsContext";
 
 interface WeatherInsightsProps {
   current: ForecastEntry;
-  /** Defaults to metric; wired up once the settings unit-toggle exists. */
-  unitSystem?: UnitSystem;
 }
+
 
 interface InsightCard {
   key: string;
@@ -19,44 +19,33 @@ interface InsightCard {
   value: string;
 }
 
-export default function WeatherInsights({ current, unitSystem = "metric" }: WeatherInsightsProps) {
+export default function WeatherInsights({ current }: WeatherInsightsProps) {
+  const { unitSystem } = useSettings();
+  const wind = convertWind(current.wind, unitSystem);
+  const pressure = convertPressure(current.pressure, unitSystem);
+  const visibility = convertVisibility(current.visibility / 1000, unitSystem);
+  const dewPoint = convertTemperature(current.dew_point, unitSystem);
   const insights: InsightCard[] = [
     {
-      key: "wind",
-      label: "Wind",
-      icon: Wind,
-      value: `${Math.round(formatValue(current.wind, unitSystem))} km/h ${getCompassDirection(current.wind_direction)}`,
+      key: "wind", label: "Wind", icon: Wind,
+      value: `${Math.round(wind.value)} ${wind.label} ${getCompassDirection(current.wind_direction)}`,
     },
     {
-      key: "pressure",
-      label: "Pressure",
-      icon: Gauge,
-      value: `${Math.round(formatValue(current.pressure, unitSystem))} mb/hPa`,
+      key: "pressure", label: "Pressure", icon: Gauge,
+      value: `${Math.round(pressure.value)} ${pressure.label}`,
     },
     {
-      key: "humidity",
-      label: "Humidity",
-      icon: Droplets,
-      value: `${Math.round(formatValue(current.humidity, unitSystem))}%`,
+      key: "humidity", label: "Humidity", icon: Droplets,
+      value: `${Math.round(current.humidity)}%`,
     },
     {
-      key: "visibility",
-      label: "Visibility",
-      icon: Eye,
-      value: `${formatValue(current.visibility / 1000, unitSystem).toFixed(2)} km`,
+      key: "visibility", label: "Visibility", icon: Eye,
+      value: `${visibility.value.toFixed(2)} ${visibility.label}`,
     },
     {
-      key: "dew_point",
-      label: "Dew Point",
-      icon: Thermometer,
-      value: `${Math.round(formatValue(current.dew_point, unitSystem))}°C`,
-    },
-    {
-      key: "uv_index",
-      label: "UV Index",
-      icon: Sun,
-      value: `${Math.round(current.uvindex)} (${getUvCategory(current.uvindex)})`,
-    },
+      key: "dew_point", label: "Dew Point", icon: Thermometer,
+      value: `${Math.round(dewPoint.value)}${dewPoint.label}`,
+},
   ];
 
   return (

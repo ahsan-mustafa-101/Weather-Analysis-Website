@@ -1,18 +1,43 @@
-/**
- * Centralized unit-conversion seam. Every displayed numeric value in
- * WeatherInsights (and eventually elsewhere) should pass through
- * here rather than being interpolated directly into JSX. Right now
- * this is a pure passthrough (metric only, matching what the backend
- * already sends) — when a unit-system toggle is added (see
- * SettingsMenu's placeholder text), the imperial/hybrid conversion
- * math plugs in here, and no component needs to change.
- */
-
 export type UnitSystem = "metric" | "imperial" | "hybrid";
 
-export function formatValue(value: number, unitSystem: UnitSystem = "metric"): number {
-  // Placeholder. Metric passthrough only, since the backend currently
-  // only sends metric values. Imperial/hybrid conversion logic
-  // (km/h -> mph, hPa -> inHg, °C -> °F, km -> mi, etc.) goes here.
-  return value;
+interface UnitDisplay {
+  value: number;
+  label: string;
+}
+
+/**
+ * Per-field conversions, since different fields convert differently
+ * — a single generic formatValue() can't know units without knowing
+ * the field. "Hybrid" here follows a common real-world convention
+ * (UK-style): Celsius temperatures, but wind speed in mph. Everything
+ * else stays metric. There's no single universal definition of
+ * "hybrid" — this is a deliberate, documented choice.
+ */
+
+export function convertTemperature(celsius: number, system: UnitSystem): UnitDisplay {
+  if (system === "imperial") {
+    return { value: (celsius * 9) / 5 + 32, label: "°F" };
+  }
+  return { value: celsius, label: "°C" }; // metric and hybrid both stay Celsius
+}
+
+export function convertWind(kmh: number, system: UnitSystem): UnitDisplay {
+  if (system === "imperial" || system === "hybrid") {
+    return { value: kmh * 0.621371, label: "mph" };
+  }
+  return { value: kmh, label: "km/h" };
+}
+
+export function convertPressure(mb: number, system: UnitSystem): UnitDisplay {
+  if (system === "imperial") {
+    return { value: mb * 0.02953, label: "inHg" };
+  }
+  return { value: mb, label: "mb/hPa" };
+}
+
+export function convertVisibility(km: number, system: UnitSystem): UnitDisplay {
+  if (system === "imperial") {
+    return { value: km * 0.621371, label: "mi" };
+  }
+  return { value: km, label: "km" };
 }

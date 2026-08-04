@@ -1,3 +1,5 @@
+"use client;"
+
 import { Droplets } from "lucide-react";
 import GlassPanel from "./GlassPanel";
 import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
@@ -5,6 +7,8 @@ import { ForecastEntry } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import { ACCENT_CLASSES } from "@/lib/accentClasses";
 import { formatHourLabel, formatTemp } from "@/lib/format";
+import { useSettings } from "@/context/SettingsContext";
+import { convertTemperature } from "@/lib/units";
 
 interface ForecastStripProps {
   /** Hourly entries EXCLUDING the "now" entry (that's the hero's job). */
@@ -12,6 +16,7 @@ interface ForecastStripProps {
 }
 
 export default function ForecastStrip({ entries }: ForecastStripProps) {
+  const { unitSystem, timeFormat } = useSettings();
   if (entries.length === 0) return null;
 
   return (
@@ -23,6 +28,7 @@ export default function ForecastStrip({ entries }: ForecastStripProps) {
         {entries.map((entry, index) => {
           const theme = getWeatherTheme(entry.weather_code, entry.is_day);
           const accent = ACCENT_CLASSES[theme.accent];
+          const temp = convertTemperature(entry.temperature, unitSystem);
           return (
             <GlassPanel
               key={entry.timestamp}
@@ -38,14 +44,14 @@ export default function ForecastStrip({ entries }: ForecastStripProps) {
                 style={{ animationDuration: "5s", animationDelay: `${index * 220}ms` }}
               >
                 <span className="font-mono text-xs text-fog">
-                  {formatHourLabel(entry.timestamp)}
+                  {formatHourLabel(entry.timestamp, timeFormat)}
                 </span>
                 <AnimatedWeatherIcon
                   name={theme.icon}
                   className="h-8 w-8 transition-transform duration-300 group-hover:scale-110"
                 />
                 <span className="text-2xl font-light text-mist">
-                  {formatTemp(entry.temperature)}
+                  {Math.round(temp.value)}{temp.label}
                 </span>
                 <div className="flex items-center gap-1 text-xs font-light text-fog">
                   <Droplets className="h-3 w-3" strokeWidth={1.5} />

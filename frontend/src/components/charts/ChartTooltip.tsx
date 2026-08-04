@@ -2,13 +2,12 @@
 
 import GlassPanel from "../GlassPanel";
 import { formatLocationTime } from "@/lib/format";
+import type { TooltipProps } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
-interface ChartTooltipProps {
-  active?: boolean;
-  payload?: { value?: number | string }[];
-  label?: string | number;
+type ChartTooltipProps = TooltipProps<ValueType, NameType> & {
   unit?: string;
-}
+};
 
 export default function ChartTooltip({ active, payload, label, unit = "" }: ChartTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;

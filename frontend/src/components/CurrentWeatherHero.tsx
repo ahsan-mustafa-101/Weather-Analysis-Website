@@ -1,9 +1,13 @@
+"use client";
+
 import GlassPanel from "./GlassPanel";
 import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import CountUpNumber from "./CountUpNumber";
 import { ForecastEntry, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
-import { formatLocationDate, formatLocationLabel, formatLocationTime, formatTemp} from "@/lib/format";
+import { formatLocationDate, formatLocationLabel, formatLocationTime } from "@/lib/format";
+import { useSettings } from "@/context/SettingsContext";
+import { convertTemperature } from "@/lib/units";
 
 interface CurrentWeatherHeroProps {
   location: SavedLocation;
@@ -22,6 +26,9 @@ export default function CurrentWeatherHero({
   earthSlot,
 }: CurrentWeatherHeroProps) {
   const theme = getWeatherTheme(current.weather_code, current.is_day);
+  const { unitSystem, timeFormat } = useSettings();
+  const temp = convertTemperature(current.temperature, unitSystem);
+  const feelsLike = convertTemperature(current.feels_like, unitSystem);
 
   return (
     <GlassPanel
@@ -33,7 +40,7 @@ export default function CurrentWeatherHero({
           <h1 className="text-xl font-light leading-snug tracking-wide text-mist sm:text-2xl">
             {formatLocationLabel(location.name, location.admin1, location.country)}
           </h1>
-          <p className="font-mono text-xs text-fog">{formatLocationTime(current.timestamp)}</p>
+          <p className="font-mono text-xs text-fog">{formatLocationTime(current.timestamp, timeFormat)}</p>
         </div>
 
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-fog/70">
@@ -42,8 +49,8 @@ export default function CurrentWeatherHero({
 
         <div className="flex items-end gap-4">
           <CountUpNumber
-            value={current.temperature}
-            format={formatTemp}
+            value={temp.value}
+            format={(v) => `${Math.round(v)}${temp.label}`}
             className="text-[clamp(4.5rem,10vw,8rem)] font-thin leading-none tracking-tight text-mist"
           />
           <AnimatedWeatherIcon name={theme.icon} className="mb-3 h-14 w-14 shrink-0" />
@@ -52,7 +59,7 @@ export default function CurrentWeatherHero({
         <div className="flex flex-col gap-1">
           <p className="text-xl font-light text-mist">{theme.label}</p>
           <p className="text-sm font-light text-fog">
-            Feels like <CountUpNumber value={current.feels_like} format={formatTemp} />
+            Feels like <CountUpNumber value={feelsLike.value} format={(v) => `${Math.round(v)}${feelsLike.label}`} />
           </p>
         </div>
       </div>

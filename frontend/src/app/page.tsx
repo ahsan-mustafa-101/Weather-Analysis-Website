@@ -8,7 +8,8 @@ import SearchBar from "@/components/SearchBar";
 import CurrentWeatherHero from "@/components/CurrentWeatherHero";
 import ForecastStrip from "@/components/ForecastStrip";
 import GlassPanel from "@/components/GlassPanel";
-import BackgroundToggle from "@/components/BackgroundToggle";
+import RefreshButton from "@/components/RefreshButton";
+import { useSettings } from "@/context/SettingsContext";
 import SettingsMenu from "@/components/SettingsMenu";
 import SceneBackground from "@/components/background/SceneBackground";
 import Earth3D from "@/components/Earth3D";
@@ -29,7 +30,7 @@ type ViewState =
 export default function Home() {
   const [view, setView] = useState<ViewState>({ status: "loading" });
   const [isSelecting, setIsSelecting] = useState(false);
-  const [backgroundEnabled, setBackgroundEnabled] = useState(true);
+  const { backgroundEnabled } = useSettings();
   const [history, setHistory] = useState<ForecastEntry[] | null>(null);
 
   // Calm default scene while there's no live weather to react to yet
@@ -119,6 +120,22 @@ export default function Home() {
     }
   }
 
+  async function handleRefresh() {
+    if (view.status !== "ready") return;
+    try {
+      const forecast = await getForecast(view.location.id, true);
+      if (!forecast || forecast.length === 0) return;
+      const [current, ...upcoming] = forecast;
+      setView({ status: "ready", location: view.location, current, upcoming });
+
+      // If your WeatherAnalysis/history wiring exists (per the flag
+      // at the top), also refresh it here:
+      // const historyData = await getForecastHistory(view.location.id);
+      // setHistory(historyData);
+    } catch {
+      // A failed refresh shouldn't blank out data already on screen.
+    }
+  }
 
   useEffect(() => {
       if (view.status !== "ready") return;
@@ -153,11 +170,7 @@ export default function Home() {
         <span className="font-mono text-sm uppercase tracking-[0.3em] text-fog">WeatherDrop</span>
         </div>
         <div className="flex items-center gap-1">
-          <BackgroundToggle
-            enabled={backgroundEnabled}
-            onToggle={() => setBackgroundEnabled((v) => !v)}
-          />
-          {/* Real dropdown now — see SettingsMenu.tsx (still placeholder content per Stage 0, but no longer a dead button). */}
+          {view.status === "ready" && <RefreshButton onRefresh={handleRefresh} />}
           <SettingsMenu />
         </div>
       </nav>

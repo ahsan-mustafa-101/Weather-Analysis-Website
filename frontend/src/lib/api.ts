@@ -105,10 +105,13 @@ export async function saveLocation(location: {
  * error.
  */
 export async function getForecast(
-  locationId: number
+  locationId: number,
+  force = false
 ): Promise<ForecastEntry[] | null> {
   try {
-    return await request<ForecastEntry[]>(`/forecasts/${locationId}`);
+    return await request<ForecastEntry[]>(
+      `/forecasts/${locationId}${force ? "?force=true" : ""}`
+    );
   } catch (err) {
     if (err instanceof ApiError && err.kind === "not_found") return null;
     throw err;

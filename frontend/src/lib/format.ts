@@ -10,6 +10,7 @@
  * wall-clock hour/minute directly out of the string instead of
  * going through a Date object's local getters.
  */
+export type TimeFormat = "12h" | "24h";
 
 interface IsoComponents {
   hour: number;
@@ -35,20 +36,24 @@ function parseIsoComponents(timestamp: string): IsoComponents | null {
   };
 }
 
-/** e.g. "3:45 PM" — the location's own local time, not the browser's. */
-export function formatLocationTime(timestamp: string): string {
+export function formatLocationTime(timestamp: string, timeFormat: TimeFormat = "12h"): string {
   const c = parseIsoComponents(timestamp);
   if (!c) return "--:--";
+  if (timeFormat === "24h") {
+    return `${String(c.hour).padStart(2, "0")}:${String(c.minute).padStart(2, "0")}`;
+  }
   const period = c.hour >= 12 ? "PM" : "AM";
   const hour12 = c.hour % 12 === 0 ? 12 : c.hour % 12;
-  const minute = String(c.minute).padStart(2, "0");
-  return `${hour12}:${minute} ${period}`;
+  return `${hour12}:${String(c.minute).padStart(2, "0")} ${period}`;
 }
 
 /** e.g. "3 PM" — compact form used on forecast strip cards. */
-export function formatHourLabel(timestamp: string): string {
+export function formatHourLabel(timestamp: string, timeFormat: TimeFormat = "12h"): string {
   const c = parseIsoComponents(timestamp);
   if (!c) return "--";
+  if (timeFormat === "24h") {
+    return `${String(c.hour).padStart(2, "0")}:00`;
+  }
   const period = c.hour >= 12 ? "PM" : "AM";
   const hour12 = c.hour % 12 === 0 ? 12 : c.hour % 12;
   return `${hour12} ${period}`;
