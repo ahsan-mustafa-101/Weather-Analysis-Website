@@ -6,7 +6,7 @@ import AnimatedWeatherIcon from "./AnimatedWeatherIcon";
 import { ForecastEntry } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import { ACCENT_CLASSES } from "@/lib/accentClasses";
-import { formatHourLabel, formatTemp } from "@/lib/format";
+import { formatHourLabel} from "@/lib/format";
 import { useSettings } from "@/context/SettingsContext";
 import { convertTemperature } from "@/lib/units";
 

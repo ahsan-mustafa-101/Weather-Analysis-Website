@@ -95,7 +95,7 @@ export default function SettingsMenu() {
               >
                 <span
                   className={`absolute top-0.5 h-5 w-5 rounded-full bg-mist transition-transform duration-200 ${
-                              backgroundEnabled ? "translate-x-5" : "translate-x-0.5"
+                              backgroundEnabled ? "translate-x-0" : "-translate-x-5"
                   }`} 
                 />
               </button>
