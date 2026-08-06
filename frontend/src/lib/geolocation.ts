@@ -53,14 +53,27 @@ export function getCurrentCoordinates(): Promise<Coordinates> {
  * — no backend involvement, this is a per-browser preference, not
  * account data.
  */
-const ASKED_KEY = "weatherdrop:geolocation-asked";
+const GRANTED_KEY = "weatherdrop:geolocation-granted"; // localStorage — permanent
+const SESSION_ASKED_KEY = "weatherdrop:geolocation-session-asked"; // sessionStorage — this session only
 
-export function hasAskedForLocation(): boolean {
-  if (typeof window === "undefined") return true; // SSR guard
-  return localStorage.getItem(ASKED_KEY) === "true";
+/** True forever, once the user has explicitly allowed location access. */
+export function hasGrantedLocation(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(GRANTED_KEY) === "true";
 }
 
-export function markLocationAsked(): void {
+export function markLocationGranted(): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(ASKED_KEY, "true");
+  localStorage.setItem(GRANTED_KEY, "true");
+}
+
+/** True only for the current tab/browser session — resets on next visit. */
+export function hasAskedThisSession(): boolean {
+  if (typeof window === "undefined") return true;
+  return sessionStorage.getItem(SESSION_ASKED_KEY) === "true";
+}
+
+export function markAskedThisSession(): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(SESSION_ASKED_KEY, "true");
 }

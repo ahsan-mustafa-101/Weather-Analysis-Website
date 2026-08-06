@@ -16,7 +16,7 @@ import Earth3D from "@/components/Earth3D";
 import WeatherInsights from "@/components/WeatherInsights";
 import WeatherAnalysis from "@/components/WeatherAnalysis";
 import { getForecast, getForecastHistory, getLocations, pickDefaultLocation, saveLocation, reverseGeocode } from "@/lib/api";
-import { getCurrentCoordinates, hasAskedForLocation, markLocationAsked, GeolocationError } from "@/lib/geolocation";
+import { getCurrentCoordinates, hasGrantedLocation, markAskedThisSession, markLocationGranted, hasAskedThisSession, GeolocationError } from "@/lib/geolocation";
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 
@@ -48,15 +48,21 @@ export default function Home() {
     async function loadInitial() {
     try {
       // Try geolocation first, once per browser ever.
-      if (!hasAskedForLocation()) {
-        markLocationAsked();
+      // Try geolocation if: user has permanently granted before, OR we
+      // haven't asked this session yet (covers first-ever visit and any
+      // fresh session after a prior denial).
+      if (hasGrantedLocation() || !hasAskedThisSession()) {
+        markAskedThisSession();
         try {
           const coords = await getCurrentCoordinates();
+          markLocationGranted(); // success confirms permission is granted — remember permanently
           const place = await reverseGeocode(coords.latitude, coords.longitude);
           const saved = await saveLocation({
             name: place.name,
             latitude: coords.latitude,
             longitude: coords.longitude,
+            admin1: place.admin1,
+            country: place.country,
           });
           const location: SavedLocation = {
             id: saved.location_id,
@@ -77,13 +83,14 @@ export default function Home() {
 
           const [current, ...upcoming] = forecast;
           setView({ status: "ready", location, current, upcoming });
-          return; // Successfully used geolocation — done.
+          return;
         } catch (geoErr) {
-          // Denied, unavailable, unsupported, or timed out — fall
-          // through to the existing most-recently-saved logic below.
           if (geoErr instanceof GeolocationError) {
             console.log(`Geolocation unavailable (${geoErr.reason}), falling back.`);
           }
+          // No markLocationGranted() call here — denial/failure only
+          // persists for this session (via markAskedThisSession above),
+          // not permanently.
         }
       }
 
