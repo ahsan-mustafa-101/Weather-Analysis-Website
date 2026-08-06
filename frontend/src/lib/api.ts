@@ -86,12 +86,17 @@ export async function saveLocation(location: {
   name: string;
   latitude: number;
   longitude: number;
+  admin1?: string | null;
+  country?: string | null;
 }): Promise<SaveLocationResponse> {
   const params = new URLSearchParams({
     name: location.name,
     latitude: String(location.latitude),
     longitude: String(location.longitude),
   });
+  if (location.admin1) params.set("admin1", location.admin1);
+  if (location.country) params.set("country", location.country);
+
   return request<SaveLocationResponse>(`/locations/save?${params.toString()}`, {
     method: "POST",
   });
@@ -144,3 +149,13 @@ export function pickDefaultLocation(
   // primary key, so the highest id is the most recently saved row.
   return locations.reduce((latest, loc) => (loc.id > latest.id ? loc : latest));
 }
+
+
+export async function reverseGeocode(latitude: number, longitude: number): Promise<{
+  name: string;
+  admin1: string | null;
+  country: string | null;
+}> {
+  return request(`/locations/reverse?latitude=${latitude}&longitude=${longitude}`);
+}
+

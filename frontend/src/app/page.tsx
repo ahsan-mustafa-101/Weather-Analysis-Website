@@ -15,7 +15,8 @@ import SceneBackground from "@/components/background/SceneBackground";
 import Earth3D from "@/components/Earth3D";
 import WeatherInsights from "@/components/WeatherInsights";
 import WeatherAnalysis from "@/components/WeatherAnalysis";
-import { getForecast, getForecastHistory, getLocations, pickDefaultLocation, saveLocation } from "@/lib/api";
+import { getForecast, getForecastHistory, getLocations, pickDefaultLocation, saveLocation, reverseGeocode } from "@/lib/api";
+import { getCurrentCoordinates, hasAskedForLocation, markLocationAsked, GeolocationError } from "@/lib/geolocation";
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 
@@ -45,36 +46,77 @@ export default function Home() {
     let cancelled = false;
 
     async function loadInitial() {
-      try {
-        const locations = await getLocations();
-        const defaultLocation = pickDefaultLocation(locations);
-        if (!defaultLocation) {
-          if (!cancelled) setView({ status: "empty" });
-          return;
-        }
-
-        const forecast = await getForecast(defaultLocation.id);
-        if (cancelled) return;
-
-        if (!forecast || forecast.length === 0) {
-          setView({ status: "gathering", location: defaultLocation });
-          return;
-        }
-
-        const [current, ...upcoming] = forecast;
-        setView({ status: "ready", location: defaultLocation, current, upcoming });
-      } catch (err) {
-        if (!cancelled) {
-          setView({
-            status: "error",
-            message:
-              err instanceof ApiError
-                ? err.message
-                : "Something went wrong loading the weather.",
+    try {
+      // Try geolocation first, once per browser ever.
+      if (!hasAskedForLocation()) {
+        markLocationAsked();
+        try {
+          const coords = await getCurrentCoordinates();
+          const place = await reverseGeocode(coords.latitude, coords.longitude);
+          const saved = await saveLocation({
+            name: place.name,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
           });
+          const location: SavedLocation = {
+            id: saved.location_id,
+            name: saved.name,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            admin1: place.admin1,
+            country: place.country,
+          };
+
+          const forecast = await getForecast(location.id);
+          if (cancelled) return;
+
+          if (!forecast || forecast.length === 0) {
+            setView({ status: "gathering", location });
+            return;
+          }
+
+          const [current, ...upcoming] = forecast;
+          setView({ status: "ready", location, current, upcoming });
+          return; // Successfully used geolocation — done.
+        } catch (geoErr) {
+          // Denied, unavailable, unsupported, or timed out — fall
+          // through to the existing most-recently-saved logic below.
+          if (geoErr instanceof GeolocationError) {
+            console.log(`Geolocation unavailable (${geoErr.reason}), falling back.`);
+          }
         }
       }
+
+      // Existing fallback: most recently saved location.
+      const locations = await getLocations();
+      const defaultLocation = pickDefaultLocation(locations);
+      if (!defaultLocation) {
+        if (!cancelled) setView({ status: "empty" });
+        return;
+      }
+
+      const forecast = await getForecast(defaultLocation.id);
+      if (cancelled) return;
+
+      if (!forecast || forecast.length === 0) {
+        setView({ status: "gathering", location: defaultLocation });
+        return;
+      }
+
+      const [current, ...upcoming] = forecast;
+      setView({ status: "ready", location: defaultLocation, current, upcoming });
+    } catch (err) {
+      if (!cancelled) {
+        setView({
+          status: "error",
+          message:
+            err instanceof ApiError
+              ? err.message
+              : "Something went wrong loading the weather.",
+        });
+      }
     }
+  }
 
     loadInitial();
     return () => {
@@ -89,6 +131,8 @@ export default function Home() {
         name: result.name,
         latitude: result.latitude,
         longitude: result.longitude,
+        admin1: result.admin1,
+        country: result.country,
       });
       const location: SavedLocation = {
         id: saved.location_id,
