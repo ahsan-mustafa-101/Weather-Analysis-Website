@@ -34,7 +34,7 @@ def get_forecast_data(lat, lon):
 
 
 def get_geo_reverse_data(lat, lon):
-    url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&zoom=10&addressdetails=1&accept-language=en`"
+    url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&zoom=10&addressdetails=1&accept-language=en"
     headers = {"User-Agent": "WeatherDrop/1.0 (personal weather project)"}
 
     try:
