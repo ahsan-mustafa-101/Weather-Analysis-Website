@@ -33,6 +33,21 @@ def get_forecast_data(lat, lon):
             return None
 
 
+def get_geo_reverse_data(lat, lon):
+    url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&zoom=10&addressdetails=1&accept-language=en`"
+    headers = {"User-Agent": "WeatherDrop/1.0 (personal weather project)"}
+
+    try:
+        response = requests.get(url, headers= headers, timeout=15)
+        response.raise_for_status()
+
+        return response.json()
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request not proceeded, issue: {e}")
+        return None
+
+
 def parse_geo(geo_data):
     locations = []
     for index in range(len(geo_data["results"])):
@@ -117,6 +132,11 @@ def parse_forecast(data):
         }
         )
     return values
+
+
+def parse_reverse_geo_data(data):
+    display_name = data.get("display_name")
+    return {"name": display_name, "admin1": None, "country": None}
 
 def get_utc_offset(data):
     return data.get("utc_offset_seconds", 0)

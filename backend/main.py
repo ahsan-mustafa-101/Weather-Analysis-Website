@@ -156,6 +156,16 @@ def get_historical_forecasts(location_id: int):
     return get_historical_forecast_data_from_database(location_id)
 
 
+@app.get("/locations/reverse")
+def get_reverse_geo_details(latitude: float, longitude: float):
+    data = api_fetch.get_geo_reverse_data(latitude, longitude)
+    if data is None:
+        raise HTTPException(status_code=502, detail="Failed to reach reverse geocoding service.")
+    result = api_fetch.parse_reverse_geo_data(data)
+    if result["name"] is None:
+        raise HTTPException(status_code=404, detail="Could not determine location name.")
+
+    return result
 
 
 def get_forecast_from_database(location_id, force = False):
