@@ -133,10 +133,26 @@ def parse_forecast(data):
         )
     return values
 
-
 def parse_reverse_geo_data(data):
-    display_name = data.get("display_name")
-    return {"name": display_name, "admin1": None, "country": None}
+    address = data.get("address", {})
+
+    name = (
+        address.get("city")
+        or address.get("town")
+        or address.get("village")
+        or address.get("municipality")
+        or address.get("county")
+        or data.get("display_name")
+    )
+
+    admin1 = address.get("state")
+    country = address.get("country")
+
+    return {
+        "name": name,
+        "admin1": admin1,
+        "country": country,
+    }
 
 def get_utc_offset(data):
     return data.get("utc_offset_seconds", 0)
