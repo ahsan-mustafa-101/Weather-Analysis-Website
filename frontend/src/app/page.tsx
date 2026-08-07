@@ -16,9 +16,10 @@ import Earth3D from "@/components/Earth3D";
 import WeatherInsights from "@/components/WeatherInsights";
 import WeatherAnalysis from "@/components/WeatherAnalysis";
 import { getForecast, getForecastHistory, getLocations, pickDefaultLocation, saveLocation, reverseGeocode } from "@/lib/api";
-import { getCurrentCoordinates, hasGrantedLocation, markAskedThisSession, markLocationGranted, hasAskedThisSession, GeolocationError } from "@/lib/geolocation";
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
+import LocationPrompt from "@/components/LocationPrompt";
+import { getCurrentCoordinates, hasGrantedLocation, hasAskedThisSession, markAskedThisSession, markLocationGranted, GeolocationError } from "@/lib/geolocation";
 
 
 type ViewState =
@@ -33,6 +34,8 @@ export default function Home() {
   const [isSelecting, setIsSelecting] = useState(false);
   const { backgroundEnabled } = useSettings();
   const [history, setHistory] = useState<ForecastEntry[] | null>(null);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Calm default scene while there's no live weather to react to yet
   // (loading / empty / gathering / error states).
@@ -41,60 +44,11 @@ export default function Home() {
       ? getWeatherTheme(view.current.weather_code, view.current.is_day)
       : { scene: "clear-night" as const, effects: [] as const };
 
-  // Initial load: most recently saved location, per Stage 0 decision.
   useEffect(() => {
-    let cancelled = false;
+  let cancelled = false;
 
-    async function loadInitial() {
+  async function loadFallback() {
     try {
-      // Try geolocation first, once per browser ever.
-      // Try geolocation if: user has permanently granted before, OR we
-      // haven't asked this session yet (covers first-ever visit and any
-      // fresh session after a prior denial).
-      if (hasGrantedLocation() || !hasAskedThisSession()) {
-        markAskedThisSession();
-        try {
-          const coords = await getCurrentCoordinates();
-          markLocationGranted(); // success confirms permission is granted — remember permanently
-          const place = await reverseGeocode(coords.latitude, coords.longitude);
-          const saved = await saveLocation({
-            name: place.name,
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            admin1: place.admin1,
-            country: place.country,
-          });
-          const location: SavedLocation = {
-            id: saved.location_id,
-            name: saved.name,
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            admin1: place.admin1,
-            country: place.country,
-          };
-
-          const forecast = await getForecast(location.id);
-          if (cancelled) return;
-
-          if (!forecast || forecast.length === 0) {
-            setView({ status: "gathering", location });
-            return;
-          }
-
-          const [current, ...upcoming] = forecast;
-          setView({ status: "ready", location, current, upcoming });
-          return;
-        } catch (geoErr) {
-          if (geoErr instanceof GeolocationError) {
-            console.log(`Geolocation unavailable (${geoErr.reason}), falling back.`);
-          }
-          // No markLocationGranted() call here — denial/failure only
-          // persists for this session (via markAskedThisSession above),
-          // not permanently.
-        }
-      }
-
-      // Existing fallback: most recently saved location.
       const locations = await getLocations();
       const defaultLocation = pickDefaultLocation(locations);
       if (!defaultLocation) {
@@ -125,12 +79,136 @@ export default function Home() {
     }
   }
 
-    loadInitial();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  async function attemptGeolocation() {
+    try {
+      const coords = await getCurrentCoordinates();
+      markLocationGranted();
+      const place = await reverseGeocode(coords.latitude, coords.longitude);
+      const saved = await saveLocation({
+        name: place.name,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        admin1: place.admin1,
+        country: place.country,
+      });
+      const location: SavedLocation = {
+        id: saved.location_id,
+        name: saved.name,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        admin1: place.admin1,
+        country: place.country,
+      };
 
+      const forecast = await getForecast(location.id);
+      if (cancelled) return;
+
+      if (!forecast || forecast.length === 0) {
+        setView({ status: "gathering", location });
+        return;
+      }
+
+      const [current, ...upcoming] = forecast;
+      setView({ status: "ready", location, current, upcoming });
+    } catch (geoErr) {
+      if (geoErr instanceof GeolocationError) {
+        console.log(`Geolocation unavailable (${geoErr.reason}), falling back.`);
+      }
+      if (!cancelled) await loadFallback();
+    }
+  }
+
+  async function init() {
+    if (hasGrantedLocation()) {
+      // Already granted previously — safe to auto-request silently,
+      // no button tap needed (the user already consented once).
+      await attemptGeolocation();
+      return;
+    }
+
+    if (!hasAskedThisSession()) {
+      // First ask this session — mobile browsers require a real user
+      // gesture for the permission prompt, so show a banner with a
+      // button instead of calling getCurrentCoordinates() here.
+      if (!cancelled) setShowLocationPrompt(true);
+      return;
+    }
+
+    // Already asked and declined this session — just load normally.
+    await loadFallback();
+  }
+
+  init();
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
+  async function handleAllowLocation() {
+    markAskedThisSession();
+    setIsLocating(true);
+    try {
+      const coords = await getCurrentCoordinates();
+      markLocationGranted();
+      const place = await reverseGeocode(coords.latitude, coords.longitude);
+      const saved = await saveLocation({
+        name: place.name,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        admin1: place.admin1,
+        country: place.country,
+      });
+      const location: SavedLocation = {
+        id: saved.location_id,
+        name: saved.name,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        admin1: place.admin1,
+        country: place.country,
+      };
+
+      const forecast = await getForecast(location.id);
+      if (!forecast || forecast.length === 0) {
+        setView({ status: "gathering", location });
+      } else {
+        const [current, ...upcoming] = forecast;
+        setView({ status: "ready", location, current, upcoming });
+      }
+    } catch {
+      await handleDismissLocation(false);
+      return;
+    } finally {
+      setIsLocating(false);
+      setShowLocationPrompt(false);
+    }
+  }
+
+  async function handleDismissLocation(hideOnly = true) {
+    markAskedThisSession();
+    setShowLocationPrompt(false);
+    if (hideOnly) {
+      try {
+        const locations = await getLocations();
+        const defaultLocation = pickDefaultLocation(locations);
+        if (!defaultLocation) {
+          setView({ status: "empty" });
+          return;
+        }
+        const forecast = await getForecast(defaultLocation.id);
+        if (!forecast || forecast.length === 0) {
+          setView({ status: "gathering", location: defaultLocation });
+          return;
+        }
+        const [current, ...upcoming] = forecast;
+        setView({ status: "ready", location: defaultLocation, current, upcoming });
+      } catch (err) {
+        setView({
+          status: "error",
+          message: err instanceof ApiError ? err.message : "Something went wrong loading the weather.",
+        });
+      }
+    }
+  }
   async function handleSelectLocation(result: LocationResult) {
     setIsSelecting(true);
     try {
@@ -227,6 +305,14 @@ export default function Home() {
       </nav>
 
       <SearchBar onSelect={handleSelectLocation} isSelecting={isSelecting} />
+
+      {showLocationPrompt && (
+        <LocationPrompt
+          onAllow={handleAllowLocation}
+          onDismiss={() => handleDismissLocation(true)}
+          isLoading={isLocating}
+        />
+      )}
 
       <main className="flex w-full max-w-6xl flex-1 flex-col items-center gap-10">
         {view.status === "loading" && <LoadingState />}
