@@ -304,22 +304,24 @@ export default function Home() {
         </div>
       </nav>
 
-      <SearchBar onSelect={handleSelectLocation} isSelecting={isSelecting} />
-
-      {showLocationPrompt && (
+      {showLocationPrompt ? (
+      <main className="flex w-full flex-1 flex-col items-center justify-center">
         <LocationPrompt
           onAllow={handleAllowLocation}
-          onDismiss={() => handleDismissLocation(true)}
+          onDeny={() => handleDismissLocation(true)}
           isLoading={isLocating}
         />
-      )}
+      </main>
+    ) : (
+      <>
+    <SearchBar onSelect={handleSelectLocation} isSelecting={isSelecting} />
 
-      <main className="flex w-full max-w-6xl flex-1 flex-col items-center gap-10">
-        {view.status === "loading" && <LoadingState />}
-        {view.status === "empty" && <EmptyState />}
-        {view.status === "gathering" && <GatheringState location={view.location} />}
-        {view.status === "error" && <ErrorState message={view.message} />}
-        {view.status === "ready" && (
+    <main className="flex w-full max-w-6xl flex-1 flex-col items-center gap-10">
+      {view.status === "loading" && <LoadingState />}
+      {view.status === "empty" && <EmptyState />}
+      {view.status === "gathering" && <GatheringState location={view.location} />}
+      {view.status === "error" && <ErrorState message={view.message} />}
+      {view.status === "ready" && (
         <>
           <CurrentWeatherHero
             location={view.location}
@@ -331,8 +333,9 @@ export default function Home() {
           {history && history.length > 0 && <WeatherAnalysis history={history} />}
         </>
       )}
-      </main>
-
+    </main>
+  </>
+)}
       <footer className="mt-16 w-full max-w-6xl border-t border-white/5 py-8">
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
         <p className="font-mono text-xs text-fog/50">
