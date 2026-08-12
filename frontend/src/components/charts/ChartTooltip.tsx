@@ -20,7 +20,7 @@ export default function ChartTooltip({ active, payload, label, unit = "" }: Char
         {formatLocationTime(String(label))}
       </p>
       <p className="text-sm font-light text-mist">
-        {payload[0].value}
+        {Number(payload[0].value).toFixed(1)}
         {unit}
       </p>
     </GlassPanel>

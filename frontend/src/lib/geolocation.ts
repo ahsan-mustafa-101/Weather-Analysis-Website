@@ -55,6 +55,7 @@ export function getCurrentCoordinates(): Promise<Coordinates> {
  */
 const GRANTED_KEY = "weatherdrop:geolocation-granted"; // localStorage — permanent
 const SESSION_ASKED_KEY = "weatherdrop:geolocation-session-asked"; // sessionStorage — this session only
+const LOCATION_ID_KEY = "weatherdrop:geolocation-location-id";
 
 /** True forever, once the user has explicitly allowed location access. */
 export function hasGrantedLocation(): boolean {
@@ -76,4 +77,15 @@ export function hasAskedThisSession(): boolean {
 export function markAskedThisSession(): void {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(SESSION_ASKED_KEY, "true");
+}
+
+export function getSavedGeolocationId(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(LOCATION_ID_KEY);
+  return raw ? Number(raw) : null;
+}
+
+export function setSavedGeolocationId(id: number): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LOCATION_ID_KEY, String(id));
 }

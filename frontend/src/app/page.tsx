@@ -19,7 +19,7 @@ import { getForecast, getForecastHistory, getLocations, pickDefaultLocation, sav
 import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/types";
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import LocationPrompt from "@/components/LocationPrompt";
-import { getCurrentCoordinates, hasGrantedLocation, hasAskedThisSession, markAskedThisSession, markLocationGranted, GeolocationError } from "@/lib/geolocation";
+import { getCurrentCoordinates, hasGrantedLocation, hasAskedThisSession, markAskedThisSession, markLocationGranted, GeolocationError, setSavedGeolocationId,getSavedGeolocationId } from "@/lib/geolocation";
 
 
 type ViewState =
@@ -80,43 +80,68 @@ export default function Home() {
   }
 
   async function attemptGeolocation() {
-    try {
-      const coords = await getCurrentCoordinates();
-      markLocationGranted();
-      const place = await reverseGeocode(coords.latitude, coords.longitude);
-      const saved = await saveLocation({
-        name: place.name,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        admin1: place.admin1,
-        country: place.country,
-      });
-      const location: SavedLocation = {
-        id: saved.location_id,
-        name: saved.name,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        admin1: place.admin1,
-        country: place.country,
-      };
-
-      const forecast = await getForecast(location.id);
+  try {
+    const existingId = getSavedGeolocationId();
+    if (existingId) {
+      // Already saved before — just fetch its forecast, don't re-save.
+      const forecast = await getForecast(existingId);
       if (cancelled) return;
-
       if (!forecast || forecast.length === 0) {
-        setView({ status: "gathering", location });
-        return;
+        const locations = await getLocations();
+        const loc = locations.find((l) => l.id === existingId);
+        if (loc) {
+          setView({ status: "gathering", location: loc });
+          return;
+        }
+      } else {
+        const locations = await getLocations();
+        const loc = locations.find((l) => l.id === existingId);
+        if (loc) {
+          const [current, ...upcoming] = forecast;
+          setView({ status: "ready", location: loc, current, upcoming });
+          return;
+        }
       }
-
-      const [current, ...upcoming] = forecast;
-      setView({ status: "ready", location, current, upcoming });
-    } catch (geoErr) {
-      if (geoErr instanceof GeolocationError) {
-        console.log(`Geolocation unavailable (${geoErr.reason}), falling back.`);
-      }
-      if (!cancelled) await loadFallback();
+      // Fall through to fallback if the stored id is somehow gone.
     }
+
+    const coords = await getCurrentCoordinates();
+    markLocationGranted();
+    const place = await reverseGeocode(coords.latitude, coords.longitude);
+    const saved = await saveLocation({
+      name: place.name,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      admin1: place.admin1,
+      country: place.country,
+    });
+    setSavedGeolocationId(saved.location_id);
+    const location: SavedLocation = {
+      id: saved.location_id,
+      name: saved.name,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      admin1: place.admin1,
+      country: place.country,
+    };
+
+    const forecast = await getForecast(location.id);
+    if (cancelled) return;
+
+    if (!forecast || forecast.length === 0) {
+      setView({ status: "gathering", location });
+      return;
+    }
+
+    const [current, ...upcoming] = forecast;
+    setView({ status: "ready", location, current, upcoming });
+  } catch (geoErr) {
+    if (geoErr instanceof GeolocationError) {
+      console.log(`Geolocation unavailable (${geoErr.reason}), falling back.`);
+    }
+    if (!cancelled) await loadFallback();
   }
+}
 
   async function init() {
     if (hasGrantedLocation()) {
@@ -145,43 +170,79 @@ export default function Home() {
 }, []);
 
   async function handleAllowLocation() {
-    markAskedThisSession();
-    setIsLocating(true);
-    try {
-      const coords = await getCurrentCoordinates();
-      markLocationGranted();
-      const place = await reverseGeocode(coords.latitude, coords.longitude);
-      const saved = await saveLocation({
-        name: place.name,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        admin1: place.admin1,
-        country: place.country,
-      });
-      const location: SavedLocation = {
-        id: saved.location_id,
-        name: saved.name,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        admin1: place.admin1,
-        country: place.country,
-      };
+  markAskedThisSession();
+  setIsLocating(true);
 
-      const forecast = await getForecast(location.id);
+  try {
+    const existingId = getSavedGeolocationId();
+
+    if (existingId) {
+      // Already saved before — just fetch its forecast, don't re-save.
+      const forecast = await getForecast(existingId);
+
       if (!forecast || forecast.length === 0) {
-        setView({ status: "gathering", location });
+        const locations = await getLocations();
+        const loc = locations.find((l) => l.id === existingId);
+
+        if (loc) {
+          setView({ status: "gathering", location: loc });
+          return;
+        }
       } else {
-        const [current, ...upcoming] = forecast;
-        setView({ status: "ready", location, current, upcoming });
+        const locations = await getLocations();
+        const loc = locations.find((l) => l.id === existingId);
+
+        if (loc) {
+          const [current, ...upcoming] = forecast;
+          setView({ status: "ready", location: loc, current, upcoming });
+          return;
+        }
       }
-    } catch {
-      await handleDismissLocation(false);
-      return;
-    } finally {
-      setIsLocating(false);
-      setShowLocationPrompt(false);
+
+      // Fall through if the stored ID no longer exists.
     }
+
+    const coords = await getCurrentCoordinates();
+    markLocationGranted();
+
+    const place = await reverseGeocode(coords.latitude, coords.longitude);
+
+    const saved = await saveLocation({
+      name: place.name,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      admin1: place.admin1,
+      country: place.country,
+    });
+
+    // Remember the newly saved location.
+    setSavedGeolocationId(saved.location_id);
+
+    const location: SavedLocation = {
+      id: saved.location_id,
+      name: saved.name,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      admin1: place.admin1,
+      country: place.country,
+    };
+
+    const forecast = await getForecast(location.id);
+
+    if (!forecast || forecast.length === 0) {
+      setView({ status: "gathering", location });
+    } else {
+      const [current, ...upcoming] = forecast;
+      setView({ status: "ready", location, current, upcoming });
+    }
+  } catch {
+    await handleDismissLocation(false);
+    return;
+  } finally {
+    setIsLocating(false);
+    setShowLocationPrompt(false);
   }
+}
 
   async function handleDismissLocation(hideOnly = true) {
     markAskedThisSession();
