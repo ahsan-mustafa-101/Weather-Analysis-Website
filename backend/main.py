@@ -7,6 +7,8 @@ from scheduler import schedule_job
 from database import get_connection, fetch_locations, insert_location, insert_forecasts, create_tables, get_location_by_id, update_location_offset
 import api_fetch
 
+from pydantic import BaseModel
+import chatbot
 
 
 @asynccontextmanager
@@ -277,3 +279,23 @@ def get_historical_forecast_data_from_database(location_id):
 
     finally:
         conn.close()
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage]
+
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    try:
+        messages = [{"role": m.role, "content": m.content} for m in request.messages]
+        result = chatbot.handle_chat(messages)
+        return {"reply": result["reply"]}
+    except Exception as e:
+        print(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail="The chatbot ran into a problem.")
