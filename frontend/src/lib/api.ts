@@ -6,7 +6,7 @@ import {
   SavedLocation,
   SaveLocationResponse,
 } from "./types";
-
+import { ChatMessage, ChatResponse } from "./types";
 /**
  * Data-fetching layer. Every network call to the backend goes through
  * a function exported here — components never call fetch() directly.
@@ -159,3 +159,17 @@ export async function reverseGeocode(latitude: number, longitude: number): Promi
   return request(`/locations/reverse?latitude=${latitude}&longitude=${longitude}`);
 }
 
+
+/**
+ * Sends the full conversation so far (including the newest user
+ * message) and gets back the assistant's reply. The backend is
+ * stateless — we resend the whole history every time, same as any
+ * LLM API. The frontend owns the running message list.
+ */
+export async function sendChatMessage(messages: ChatMessage[]): Promise<ChatResponse> {
+  return request<ChatResponse>("/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+}

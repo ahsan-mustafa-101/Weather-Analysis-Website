@@ -80,3 +80,13 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
+
+
+export interface ChatMessage {
+  role: "user" | "model";
+  content: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+}

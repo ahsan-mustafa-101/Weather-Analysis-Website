@@ -20,7 +20,7 @@ import { ApiError, ForecastEntry, LocationResult, SavedLocation } from "@/lib/ty
 import { getWeatherTheme } from "@/lib/weatherTheme";
 import LocationPrompt from "@/components/LocationPrompt";
 import { getCurrentCoordinates, hasGrantedLocation, hasAskedThisSession, markAskedThisSession, markLocationGranted, GeolocationError, setSavedGeolocationId,getSavedGeolocationId } from "@/lib/geolocation";
-
+import ChatWidget from "@/components/chat/ChatWidget";
 
 type ViewState =
   | { status: "loading" }
@@ -436,6 +436,7 @@ export default function Home() {
         </div>
       </div>
     </footer>
+    <ChatWidget />
     </div>
   );
 }
