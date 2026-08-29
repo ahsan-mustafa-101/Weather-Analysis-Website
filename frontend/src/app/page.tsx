@@ -436,7 +436,7 @@ export default function Home() {
         </div>
       </div>
     </footer>
-    <ChatWidget />
+    {view.status === "ready" && <ChatWidget />}
     </div>
   );
 }
