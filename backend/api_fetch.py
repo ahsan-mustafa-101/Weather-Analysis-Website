@@ -136,14 +136,11 @@ def parse_forecast(data):
 def parse_reverse_geo_data(data):
     address = data.get("address", {})
 
-    name = (
-        address.get("city")
-        or address.get("town")
-        or address.get("village")
-        or address.get("municipality")
-        or address.get("county")
-        or data.get("display_name")
-    )
+    name = data.get("name")
+
+    if not name:
+        display_name = data.get("display_name")
+        name = display_name.split(",")[0].strip() if display_name else None
 
     admin1 = address.get("state")
     country = address.get("country")

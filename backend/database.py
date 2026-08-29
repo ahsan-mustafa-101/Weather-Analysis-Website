@@ -42,7 +42,7 @@ def create_tables(conn):
         wind DECIMAL(5,2),
         pressure DECIMAL(6,2),
         humidity SMALLINT,
-        visibility DECIMAL(4,2),
+        visibility DECIMAL(7,2),
         uvindex DECIMAL(6,2),
         dew_point DECIMAL(5,2),
         wind_direction SMALLINT,
