@@ -1,42 +1,62 @@
 # Weather-Analysis-Website
-A full stack weather forecasting web application that allows users to search locations & view 24-hour weather forecasts using the Open-Meteo API.
+A full-stack weather forecasting web application that provides detailed weather data, 24-hour forecasts, interactive weather analytics, location-based weather detection, a 3D interactive Earth, and an AI-powered chatbot using real-time weather data.
 
 ## Preview
 <p align="center">
-  <img width="1918" height="862" alt="Home Page" src="https://github.com/user-attachments/assets/e3b0c36e-506d-4910-be09-07bb3e8cc7fc" />
+  <img width="1917" height="1017" alt="image" src="https://github.com/user-attachments/assets/81aaf4de-65e0-49ca-9c7d-008a34329b72" />
 </p>
    
 <p align="center">
-  <em>Figure 1: WeatherDrop home page startup interface</em>
+  <em>Figure 1: WeatherDrop startup interface</em>
 </p>
 <br>
 
 <p align="center">
-  <img width="1917" height="901" alt="image" src="https://github.com/user-attachments/assets/5f29d331-8128-47dc-a567-e7613e4bcf29" />
+  <img width="1917" height="1010" alt="image" src="https://github.com/user-attachments/assets/604ea07e-ea13-4ba3-8470-ad363bb5ec14" />
 </p>
 
 <p align="center">
-  <em>Figure 2: Searched location along a 3d Earth model displayed</em>
+  <em>Figure 2: User current location weather forecast</em>
 </p>
 
 <p align="center">
-  <img width="1917" height="601" alt="image" src="https://github.com/user-attachments/assets/d44a5ee8-450f-481c-a9d3-5fcc766e5b8e" />
+  <img width="1917" height="1012" alt="image" src="https://github.com/user-attachments/assets/80d899f0-faa0-49cc-b406-4df61fd42036" />
 </p>
 
 <p align="center">
-  <em>Figure 3: Searched location 24-hour weather forecast results</em>
+  <em>Figure 3: 24-hour weather forecast along with other weather insights</em>
 </p>
 
+<p align="center">
+  <img width="1917" height="1017" alt="image" src="https://github.com/user-attachments/assets/684215cf-8ecf-4052-87f3-e57c519d7d5c" />
+</p>
+
+<p align="center">
+  <em>Figure 4: Weather analysis charts of past 3 days weather data</em>
+</p>
+
+<p align="center">
+  <img width="492" height="747" alt="image" src="https://github.com/user-attachments/assets/9a0a661a-e881-4c00-884a-7f85226aec2a" />
+</p>
+
+<p align="center">
+  <em>Figure 5: WeatherDrop AI assistant</em>
+</p>
 
 ## Features
 
-- Search any city
-- Store locations in PostgreSQL
-- Fetch hourly weather data
-- Automatic scheduler updates
-- Responsive design
-- FastAPI backend
-- Next.js frontend
+- Search and explore weather for any location
+- Automatic current-location weather detection
+- Detailed 24-hour weather forecasts
+- Weather analytics with interactive charts
+- Wind, pressure, humidity, visibility, UV index, and dew point data
+- AI-powered weather chatbot
+- Interactive 3D Earth with location-based navigation
+- Customizable units and 12/24-hour time format
+- PostgreSQL database for storing locations and weather data
+- Automatic scheduler for updating forecasts
+- FastAPI backend with REST APIs
+- Next.js frontend with responsive design
 
 ## Tech Stack
 
@@ -135,13 +155,8 @@ http://localhost:3000
 - Backend & database is deployed on **Render** 
 - Frontend is deployed on **Vercel**
 - Check out the deployed application : **https://weatherdrop.vercel.app/**
-  
-## Future Improvements
-- Data Analytics Charts/Graphs
-- AI chat bot
-- More weather information i.e. humidity, rain_probability etc
-- Add new features
 
+  
 ## Author 
 **Ahsan Mustafa** ⭐<br>
 Computer Science Student<br>
