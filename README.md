@@ -18,6 +18,7 @@ A full-stack weather forecasting web application that provides detailed weather 
 <p align="center">
   <em>Figure 2: User current location weather forecast</em>
 </p>
+<br>
 
 <p align="center">
   <img width="1917" height="1012" alt="image" src="https://github.com/user-attachments/assets/80d899f0-faa0-49cc-b406-4df61fd42036" />
@@ -26,6 +27,7 @@ A full-stack weather forecasting web application that provides detailed weather 
 <p align="center">
   <em>Figure 3: 24-hour weather forecast along with other weather insights</em>
 </p>
+<br>
 
 <p align="center">
   <img width="1917" height="1017" alt="image" src="https://github.com/user-attachments/assets/684215cf-8ecf-4052-87f3-e57c519d7d5c" />
@@ -34,6 +36,7 @@ A full-stack weather forecasting web application that provides detailed weather 
 <p align="center">
   <em>Figure 4: Weather analysis charts of past 3 days weather data</em>
 </p>
+<br>
 
 <p align="center">
   <img width="492" height="747" alt="image" src="https://github.com/user-attachments/assets/9a0a661a-e881-4c00-884a-7f85226aec2a" />
@@ -42,6 +45,7 @@ A full-stack weather forecasting web application that provides detailed weather 
 <p align="center">
   <em>Figure 5: WeatherDrop AI assistant</em>
 </p>
+<br>
 
 ## Features
 
@@ -107,9 +111,10 @@ Create the following environment files before running the project.
 
 ```env
 DATABASE_URL=your_postgresql_connection_string
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
-Used by the FastAPI backend to connect to PostgreSQL.
+Used by the FastAPI backend to connect to PostgreSQL and access the Gemini API for the AI chatbot.
 
 ---
 
